@@ -98,12 +98,15 @@ function CheckWindow(x) { //Für einzelenes Fenster. Via Trigger angesteuert.
         WriteEventLog(GetRoom(x) + " Fenster geschlossen!");
         if (RoomOpenWindowCount[x] == 0) {
             if (RepeatInfoMsg == true) {
+                setState(praefix + GetRoom(x) + ".IsOpen", false);
+
                 clearInterval(OpenWindowMsgHandler[x]);
             }
             else {
                 clearTimeout(OpenWindowMsgHandler[x]);
             };
         };
+
 
         if (OpenWindowCount == 0) {
             setState(praefix + "AlleFensterZu", true);
