@@ -10,6 +10,11 @@ const RepeatInfoMsg = true; // Legt fest ob Ansage einmalig oder zyklisch
 const InfoMsgAktiv = true; // Legt fest ob eine Infonachricht nach x Minuten ausgegeben werden soll
 const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff in Funktionen gesucht wird.
 
+function Meldung(msg) {
+    log(msg);
+    // Hierher Euren Code für Telegram & Co
+};
+
 //Ab hier nix mehr ändern
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
 let RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
@@ -70,19 +75,17 @@ function CheckWindow(x) { //Für einzelenes Fenster. Via Trigger angesteuert.
         setState(praefix + GetRoom(x) + ".RoomOpenWindowCount", RoomOpenWindowCount[x]);
 
         //log(GetRoom(x) + " Fenster geöffnet");
-        WriteEventLog(GetRoom(x) + " Fenster geöffnet!");
+        //WriteEventLog(GetRoom(x) + " Fenster geöffnet!");
         if (InfoMsgAktiv == true) {
             if (RepeatInfoMsg == true) { // Wenn Intervallmeldung eingestellt Interval starten und Dauer bei Ansage aufaddieren
                 OpenWindowMsgHandler[x] = setInterval(function () {
                     Laufzeit[x] = Laufzeit[x] + ZeitBisNachricht;
-                    log(GetRoom(x) + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
-                    Say(GetRoom(x) + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
+                    Meldung(GetRoom(x) + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
                 }, ZeitBisNachricht);
             }
             else {
                 OpenWindowMsgHandler[x] = setTimeout(function () { // Wenn einmalige Meldung eingestellt
-                    log(GetRoom(x) + "fenster seit " + ZeitBisNachricht / 1000 / 60 + " Minuten geöffnet!");
-                    Say(GetRoom(x) + "fenster seit " + ZeitBisNachricht / 1000 / 60 + " Minuten geöffnet!");
+                    Meldung(GetRoom(x) + "fenster seit " + ZeitBisNachricht / 1000 / 60 + " Minuten geöffnet!");
                 }, ZeitBisNachricht);
             };
         };
@@ -95,7 +98,7 @@ function CheckWindow(x) { //Für einzelenes Fenster. Via Trigger angesteuert.
         setState(praefix + GetRoom(x) + ".RoomOpenWindowCount", RoomOpenWindowCount[x]);
 
         //log(GetRoom(x) + " Fenster geschlossen.");
-        WriteEventLog(GetRoom(x) + " Fenster geschlossen!");
+        //WriteEventLog(GetRoom(x) + " Fenster geschlossen!");
         if (RoomOpenWindowCount[x] == 0) {
             if (RepeatInfoMsg == true) {
                 setState(praefix + GetRoom(x) + ".IsOpen", false);
@@ -134,14 +137,12 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
                 if (RepeatInfoMsg == true) { // Wenn Intervallmeldung eingestellt Interval starten und Dauer bei Ansage aufaddieren
                     OpenWindowMsgHandler[x] = setInterval(function () {
                         Laufzeit[x] = Laufzeit[x] + ZeitBisNachricht;
-                        log(GetRoom(x) + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
-                        Say(GetRoom(x) + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
+                        Meldung(GetRoom(x) + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 }
                 else {
                     OpenWindowMsgHandler[x] = setTimeout(function () { // Wenn einmalige Meldung eingestellt
-                        log(GetRoom(x) + "fenster seit " + ZeitBisNachricht / 1000 / 60 + " Minuten geöffnet!");
-                        Say(GetRoom(x) + "fenster seit " + ZeitBisNachricht / 1000 / 60 + " Minuten geöffnet!");
+                        Meldung(GetRoom(x) + "fenster seit " + ZeitBisNachricht / 1000 / 60 + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 };
             };
