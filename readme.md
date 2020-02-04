@@ -6,8 +6,8 @@
 #### Möglichkeit eine Meldung/Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung auszugeben
 
 # WICHTIG!!!
-# Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie eine Funktion, z.B. "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
-
+### Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie eine Funktion, z.B. "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
+![fensteroffentut1.jpg](/admin/fensteroffentut1.jpg) 
 
 # Installation
 1. Wenn noch nicht geschehen, allen gewünschten Sensoren einen Raum und eine Funktion zuweisen. Die Funktion muss vorher in den Aufzählungen hinzugefügt werden und könnte z.B. "Verschluss" lauten. Soll ein anderer Begriff verwendet werden, muss dies dann auch im Script, Zeile 11 geändert werden.
