@@ -11,8 +11,8 @@ const InfoMsgAktiv = true; // Legt fest ob eine Infonachricht nach x Minuten aus
 const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff in Funktionen gesucht wird.
 
 function Meldung(msg) {
+    Say(msg);
     log(msg);
-    // Hierher Euren Code für Telegram & Co
 };
 
 //Ab hier nix mehr ändern
@@ -25,21 +25,25 @@ let Laufzeit = [];
 var Funktionen = getEnums('functions');
 for (var x in Funktionen) {        // loop ueber alle Functions
     var Funktion = Funktionen[x].name;
-    if (typeof Funktion == 'object') Funktion = Funktion.de;
-    var members = Funktionen[x].members;
-    if (Funktion == WelcheFunktionVerwenden) { //Wenn Function ist Verschluss
-        for (let y in members) { // Loop über alle Verschluss Members
 
-            Sensor[y] = members[y];
-
-            let room = getObject(Sensor[y], 'rooms').enumNames[0];
-            if (typeof room == 'object') room = room.de;
-            //Datenpunkte pro Raum anlegen
-            createState(praefix + room + ".RoomOpenWindowCount", 0, false, { read: true, write: true, name: "Anzahl der geöffneten Fenster im Raum", type: "number", def: 0 });
-            createState(praefix + room + ".IsOpen", false, false, { read: true, write: true, name: "Fenster offen?", type: "boolean", role: "state", def: false }); //
-            //log(Funktion + ': ' + room);
-            RoomOpenWindowCount[y] = 0; // Array mit 0 initialisieren
-            Laufzeit[y] = 0; // Array mit 0 initialisieren
+    if (Funktion == undefined) {
+        log("Keine Funktion gefunden");
+    }
+    else {
+        if (typeof Funktion == 'object') Funktion = Funktion.de;
+        var members = Funktionen[x].members;
+        if (Funktion == WelcheFunktionVerwenden) { //Wenn Function ist Verschluss
+            for (let y in members) { // Loop über alle Verschluss Members
+                Sensor[y] = members[y];
+                let room = getObject(Sensor[y], 'rooms').enumNames[0];
+                if (typeof room == 'object') room = room.de;
+                //Datenpunkte pro Raum anlegen
+                createState(praefix + room + ".RoomOpenWindowCount", 0, false, { read: true, write: true, name: "Anzahl der geöffneten Fenster im Raum", type: "number", def: 0 });
+                createState(praefix + room + ".IsOpen", false, false, { read: true, write: true, name: "Fenster offen?", type: "boolean", role: "state", def: false }); //
+                //log(Funktion + ': ' + room);
+                RoomOpenWindowCount[y] = 0; // Array mit 0 initialisieren
+                Laufzeit[y] = 0; // Array mit 0 initialisieren
+            };
         };
     };
 };
@@ -58,6 +62,10 @@ for (let x = 0; x < Sensor.length; x++) {
 
 function GetRoom(x) { // Liefert den Raum von Sensor x
     let room = getObject(Sensor[x], 'rooms').enumNames[0];
+    if (room == undefined) {
+        log("Kein Raum definiert");
+        return "Kein Raum definiert";
+    };
     if (typeof room == 'object') room = room.de;
     return room;
 };
@@ -175,8 +183,13 @@ CheckAllWindows();
 //Trigger für Sensoren erzeugen
 for (let x = 0; x < Sensor.length; x++) { //Alle Sensoren durchlaufen
     on(Sensor[x], function (dp) { //Trigger in Schleife erstellen
-        SensorVal[x] = getState(Sensor[x]).val;
-        CheckWindow(x);
+        if (dp.channelId.search(praefix) == -1) { //Ausschliessen dass das Scriptverzeichnis zum Triggern verwendet wird
+            SensorVal[x] = getState(Sensor[x]).val;
+            CheckWindow(x);
+        }
+        else {
+            log("Fehler, Datenpunkt im Scriptverzeichnis als Trigger definiert", "error");
+        };
     });
 };
 
