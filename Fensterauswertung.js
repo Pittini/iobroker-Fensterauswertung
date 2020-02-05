@@ -11,7 +11,7 @@ const InfoMsgAktiv = true; // Legt fest ob eine Infonachricht nach x Minuten aus
 const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff in Funktionen gesucht wird.
 
 function Meldung(msg) {
-    Say(msg);
+
     log(msg);
 };
 
