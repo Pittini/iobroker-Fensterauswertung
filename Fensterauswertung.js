@@ -9,13 +9,29 @@ const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten
 const RepeatInfoMsg = true; // Legt fest ob Ansage einmalig oder zyklisch
 const InfoMsgAktiv = true; // Legt fest ob eine Infonachricht nach x Minuten ausgegeben werden soll
 const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff in Funktionen gesucht wird.
+const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
+const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
+const AlexaId = ""; // Die Alexa Seriennummer
+const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden?
+const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden?
+
+//Ab hier nix mehr ändern
+
 
 function Meldung(msg) {
-
+    if (UseSay == true) Say(msg);
+    if (UseTelegram == true) {
+        sendTo("telegram.0", "send", {
+            text: msg
+        });
+    };
+    if (UseAlexa == true) {
+        if (AlexaId != "") setState("alexa2.0.Echo-Devices." + AlexaId + ".Commands.announcement"/*announcement*/, msg);
+    };
     log(msg);
 };
 
-//Ab hier nix mehr ändern
+
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
 let RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
 let OpenWindowMsgHandler = []; // Objektarray für timeouts pro Raum
@@ -83,7 +99,7 @@ function CheckWindow(x) { //Für einzelenes Fenster. Via Trigger angesteuert.
         setState(praefix + GetRoom(x) + ".RoomOpenWindowCount", RoomOpenWindowCount[x]);
 
         //log(GetRoom(x) + " Fenster geöffnet");
-        //WriteEventLog(GetRoom(x) + " Fenster geöffnet!");
+        if (UseEventLog == true) WriteEventLog(GetRoom(x) + " Fenster geöffnet!");
         if (InfoMsgAktiv == true) {
             if (RepeatInfoMsg == true) { // Wenn Intervallmeldung eingestellt Interval starten und Dauer bei Ansage aufaddieren
                 OpenWindowMsgHandler[x] = setInterval(function () {
@@ -106,7 +122,7 @@ function CheckWindow(x) { //Für einzelenes Fenster. Via Trigger angesteuert.
         setState(praefix + GetRoom(x) + ".RoomOpenWindowCount", RoomOpenWindowCount[x]);
 
         //log(GetRoom(x) + " Fenster geschlossen.");
-        //WriteEventLog(GetRoom(x) + " Fenster geschlossen!");
+        if (UseEventLog == true) WriteEventLog(GetRoom(x) + " Fenster geschlossen!");
         if (RoomOpenWindowCount[x] == 0) {
             if (RepeatInfoMsg == true) {
                 setState(praefix + GetRoom(x) + ".IsOpen", false);
