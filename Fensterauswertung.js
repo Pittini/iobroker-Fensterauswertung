@@ -3,7 +3,7 @@
 
 //WICHTIG!!!
 //Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie die Funktion "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
-
+const logging = true;
 const praefix = "javascript.0.FensterUeberwachung."; //Grundpfad für Script DPs
 const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten
 const RepeatInfoMsg = true; // Legt fest ob Ansage einmalig oder zyklisch
@@ -28,7 +28,7 @@ function Meldung(msg) {
     if (UseAlexa == true) {
         if (AlexaId != "") setState("alexa2.0.Echo-Devices." + AlexaId + ".Commands.announcement"/*announcement*/, msg);
     };
-    log(msg);
+    if (logging) log(msg);
 };
 
 
@@ -36,7 +36,7 @@ let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
 let RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
 let OpenWindowMsgHandler = []; // Objektarray für timeouts pro Raum
 let Sensor = [] //Sensoren als Array anlegen
-let Laufzeit = [];
+let Laufzeit = []; //Timer Laufzeit pro Fenster
 
 var Funktionen = getEnums('functions');
 for (var x in Funktionen) {        // loop ueber alle Functions
@@ -86,8 +86,9 @@ function GetRoom(x) { // Liefert den Raum von Sensor x
     return room;
 };
 
-function CheckWindow(x) { //Für einzelenes Fenster. Via Trigger angesteuert.
+function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
     //log(getObject(SensorPraefix+Sensor[x], 'rooms').enumNames.join(', '));
+    if (logging) log(SensorVal[x])
     if (SensorVal[x] == true || SensorVal[x] == "offen" || SensorVal[x] == "gekippt" || SensorVal[x] == "open" || SensorVal[x] == "tilted") { //Fenster is offen
         Laufzeit[x] = 0;
         OpenWindowCount = OpenWindowCount + 1;
@@ -121,15 +122,17 @@ function CheckWindow(x) { //Für einzelenes Fenster. Via Trigger angesteuert.
         setState(praefix + "WindowsOpen", OpenWindowCount);
         setState(praefix + GetRoom(x) + ".RoomOpenWindowCount", RoomOpenWindowCount[x]);
 
-        //log(GetRoom(x) + " Fenster geschlossen.");
+        log(GetRoom(x) + " Fenster geschlossen.");
         if (UseEventLog == true) WriteEventLog(GetRoom(x) + " Fenster geschlossen!");
         if (RoomOpenWindowCount[x] == 0) {
-            if (RepeatInfoMsg == true) {
-                setState(praefix + GetRoom(x) + ".IsOpen", false);
+            setState(praefix + GetRoom(x) + ".IsOpen", false);
 
+            if (RepeatInfoMsg == true) {
+                if (logging) log("reaching clearInterval - OpenWindowMsgHandler[x] = " + OpenWindowMsgHandler[x]);
                 clearInterval(OpenWindowMsgHandler[x]);
             }
             else {
+                if (logging) log("reaching clearTimeout");
                 clearTimeout(OpenWindowMsgHandler[x]);
             };
         };
@@ -141,7 +144,7 @@ function CheckWindow(x) { //Für einzelenes Fenster. Via Trigger angesteuert.
             log("Alle Fenster geschlossen.");
         };
     };
-    //log(OpenWindowCount);
+    if (logging) log(OpenWindowCount);
 };
 
 
@@ -194,7 +197,7 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
 
 };
 
-CheckAllWindows();
+CheckAllWindows(); //Bei Scriptstart alle Fenster einlesen
 
 //Trigger für Sensoren erzeugen
 for (let x = 0; x < Sensor.length; x++) { //Alle Sensoren durchlaufen
