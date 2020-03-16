@@ -1,4 +1,4 @@
-// V1.1.0 vom 16.3.2020
+// V1.1.2 vom 16.3.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 
@@ -136,21 +136,21 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
         setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
 
         if (logging) log(TempRoom + " Fenster geöffnet");
-        if (UseEventLog == true) WriteEventLog(GetRoom(x) + " Fenster geöffnet!");
+        if (UseEventLog == true) WriteEventLog(TempRoom + " Fenster geöffnet!");
         if (RoomOpenWindowCount[TempRoomIndex] == 1) {
             if (InfoMsgAktiv == true) {
                 if (RepeatInfoMsg == true) { // Wenn Intervallmeldung eingestellt Interval starten und Dauer bei Ansage aufaddieren
                     if (logging) log("Setting Interval to Room:" + TempRoom);
 
-                    OpenWindowMsgHandler[x] = setInterval(function () {
-                        Laufzeit[x] = Laufzeit[x] + ZeitBisNachricht;
+                    OpenWindowMsgHandler[TempRoomIndex] = setInterval(function () {
+                        Laufzeit[TempRoomIndex] = Laufzeit[TempRoomIndex] + ZeitBisNachricht;
                         Meldung(TempRoom + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 }
                 else { // Wenn einmalige Meldung eingestellt
                     if (logging) log("Setting Timeout to Room:" + TempRoom);
 
-                    OpenWindowMsgHandler[x] = setTimeout(function () {
+                    OpenWindowMsgHandler[TempRoomIndex] = setTimeout(function () {
                         Meldung(TempRoom + "fenster seit " + ZeitBisNachricht / 1000 / 60 + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 };
@@ -166,17 +166,17 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
         setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
 
         log(TempRoom + " Fenster geschlossen.");
-        if (UseEventLog == true) WriteEventLog(GetRoom(x) + " Fenster geschlossen!");
+        if (UseEventLog == true) WriteEventLog(TempRoom + " Fenster geschlossen!");
         if (RoomOpenWindowCount[TempRoomIndex] == 0) {
             setState(praefix + TempRoom + ".IsOpen", false);
 
             if (RepeatInfoMsg == true) {
-                if (logging) log("reaching clearInterval - [x] = " + [x]);
-                clearInterval(OpenWindowMsgHandler[x]);
+                if (logging) log("reaching clearInterval - [x] = " + [x]+" TempRoomIndex="+TempRoomIndex);
+                clearInterval(OpenWindowMsgHandler[TempRoomIndex]);
             }
             else {
                 if (logging) log("reaching clearTimeout");
-                clearTimeout(OpenWindowMsgHandler[x]);
+                clearTimeout(OpenWindowMsgHandler[TempRoomIndex]);
             };
         };
 
@@ -202,7 +202,7 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
             OpenWindowCount = OpenWindowCount + 1;
             RoomOpenWindowCount[RoomList.indexOf(TempRoom)] = RoomOpenWindowCount[TempRoomIndex] + 1;
             //RoomOpenWindowCount[x] = RoomOpenWindowCount[x] + 1;
-            log("Temproom=" + TempRoom + "TempRoomIndex=" + RoomList.indexOf(TempRoom) + " RommOpenWindowcount=" + RoomOpenWindowCount[TempRoomIndex]);
+            log("Temproom=" + TempRoom + "TempRoomIndex=" + RoomList.indexOf(TempRoom) + " RoomOpenWindowcount=" + RoomOpenWindowCount[TempRoomIndex]);
 
             setState(praefix + "AlleFensterZu", false);
             setState(praefix + "WindowsOpen", OpenWindowCount);
@@ -212,15 +212,15 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
             if (InfoMsgAktiv == true && RoomOpenWindowCount[RoomList.indexOf(TempRoom)] == 1) {
                 if (RepeatInfoMsg == true) { // Wenn Intervallmeldung eingestellt Interval starten und Dauer bei Ansage aufaddieren
                     if (logging) log("Setting Interval at initialization to Room:" + TempRoom);
-                    OpenWindowMsgHandler[x] = setInterval(function () {
-                        Laufzeit[x] = Laufzeit[x] + ZeitBisNachricht;
+                    OpenWindowMsgHandler[TempRoomIndex] = setInterval(function () {
+                        Laufzeit[TempRoomIndex] = Laufzeit[TempRoomIndex] + ZeitBisNachricht;
                         Meldung(TempRoom + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 }
                 else {
                     if (logging) log("Setting Timeout at initialization to Room:" + TempRoom);
 
-                    OpenWindowMsgHandler[x] = setTimeout(function () { // Wenn einmalige Meldung eingestellt
+                    OpenWindowMsgHandler[TempRoomIndex] = setTimeout(function () { // Wenn einmalige Meldung eingestellt
                         Meldung(TempRoom + "fenster seit " + ZeitBisNachricht / 1000 / 60 + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 };
