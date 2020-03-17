@@ -1,4 +1,4 @@
-// V1.1.2 vom 16.3.2020
+// V1.1.4 vom 17.3.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 
@@ -144,7 +144,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
 
                     OpenWindowMsgHandler[TempRoomIndex] = setInterval(function () {
                         Laufzeit[TempRoomIndex] = Laufzeit[TempRoomIndex] + ZeitBisNachricht;
-                        Meldung(TempRoom + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
+                        Meldung(TempRoom + "fenster seit " + Laufzeit[TempRoomIndex] / 1000 / 60 + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 }
                 else { // Wenn einmalige Meldung eingestellt
@@ -214,7 +214,7 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
                     if (logging) log("Setting Interval at initialization to Room:" + TempRoom);
                     OpenWindowMsgHandler[TempRoomIndex] = setInterval(function () {
                         Laufzeit[TempRoomIndex] = Laufzeit[TempRoomIndex] + ZeitBisNachricht;
-                        Meldung(TempRoom + "fenster seit " + Laufzeit[x] / 1000 / 60 + " Minuten geöffnet!");
+                        Meldung(TempRoom + "fenster seit " + Laufzeit[TempRoomIndex] / 1000 / 60 + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 }
                 else {
