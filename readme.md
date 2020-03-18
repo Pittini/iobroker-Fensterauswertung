@@ -14,8 +14,7 @@
 2. Das Skript in ein neues JS Projekt kopieren.
 3. Zeile 7-11 kontrollieren und bei Bedarf anpassen
 4. Zeile 15 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
-5. Sind alle Einstellungen getroffen und kontrolliert, das Script starten. Es wird Fehlermeldungen geben. Diese ignorieren und das Script restarten. Jetzt sollte es keine Fehlermeldungen mehr geben, wenn doch, zurück zu Punkt 1ff.
-6. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie die beiden gesamt Datenpunkte welche Alle Fenster zählen und den Gesamtstatus ausgeben. All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
+5. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie die beiden gesamt Datenpunkte welche Alle Fenster zählen und den Gesamtstatus ausgeben. All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
 #### 5.2.20 Fehlerabfangroutinen integriert

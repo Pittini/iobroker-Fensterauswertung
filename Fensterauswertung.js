@@ -49,7 +49,7 @@ for (let x in Funktionen) {        // loop ueber alle Functions
     let Funktion = Funktionen[x].name;
 
     if (Funktion == undefined) {
-        log("Keine Funktion gefunden");
+         ("Keine Funktion gefunden");
     }
     else {
         if (typeof Funktion == 'object') Funktion = Funktion.de;
