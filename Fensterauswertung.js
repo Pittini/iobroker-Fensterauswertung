@@ -1,4 +1,4 @@
-// V1.1.4 vom 17.3.2020
+// V1.1.5 vom 20.3.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 
@@ -20,13 +20,13 @@ const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden?
 
 
 function Meldung(msg) {
-    if (UseSay == true) Say(msg);
-    if (UseTelegram == true) {
+    if (UseSay) Say(msg);
+    if (UseTelegram) {
         sendTo("telegram.0", "send", {
             text: msg
         });
     };
-    if (UseAlexa == true) {
+    if (UseAlexa) {
         if (AlexaId != "") setState("alexa2.0.Echo-Devices." + AlexaId + ".Commands.announcement"/*announcement*/, msg);
     };
     if (logging) log(msg);
@@ -38,6 +38,8 @@ let RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
 let OpenWindowMsgHandler = []; // Objektarray für timeouts pro Raum
 let Sensor = []; //Sensoren als Array anlegen
 let SensorVal = [];//Sensorwerte als Array anlegen
+let SensorOldVal = []; //Alte Sensorwerte als Array ablegen
+
 let Laufzeit = []; //Timer Laufzeit pro Fenster
 let RoomList = [];
 let z = 0;
@@ -49,7 +51,7 @@ for (let x in Funktionen) {        // loop ueber alle Functions
     let Funktion = Funktionen[x].name;
 
     if (Funktion == undefined) {
-         ("Keine Funktion gefunden");
+        log("Keine Funktion gefunden");
     }
     else {
         if (typeof Funktion == 'object') Funktion = Funktion.de;
@@ -125,7 +127,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
     let TempRoomIndex = RoomList.indexOf(TempRoom); // Raumlistenindex für aktuellen Raum bestimmen
     //log(getObject(SensorPraefix+Sensor[x], 'rooms').enumNames.join(', '));
     if (logging) log("reaching CheckWindow, SensorVal[" + x + "]=" + SensorVal[x] + " TempRoom=" + TempRoom)
-    if (SensorVal[x] == true || SensorVal[x] == "offen" || SensorVal[x] == "gekippt" || SensorVal[x] == "open" || SensorVal[x] == "tilted") { //Fenster is offen
+    if ((SensorVal[x] == true || SensorVal[x] == "offen" || SensorVal[x] == "gekippt" || SensorVal[x] == "open" || SensorVal[x] == "tilted") && (SensorOldVal[x] != true || SensorOldVal[x] != "offen" || SensorOldVal[x] != "gekippt" || SensorOldVal[x] != "open" || SensorOldVal[x] != "tilted")) { //Fenster is offen
         OpenWindowCount = OpenWindowCount + 1;
         RoomOpenWindowCount[TempRoomIndex] = getState(praefix + TempRoom + ".RoomOpenWindowCount").val + 1;
         if (logging) log("RoomOpenWindowCount für " + TempRoom + "=" + RoomOpenWindowCount[TempRoomIndex])
@@ -256,6 +258,7 @@ function CreateTrigger() {
         on(Sensor[x], function (dp) { //Trigger in Schleife erstellen
             if (dp.channelId.search(praefix) == -1) { //Ausschliessen dass das Scriptverzeichnis zum Triggern verwendet wird
                 SensorVal[x] = dp.state.val;
+                SensorOldVal[x] = dp.oldState.val;
                 //SensorVal[x] = getState(Sensor[x]).val;
                 CheckWindow(x);
             }
