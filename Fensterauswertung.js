@@ -1,4 +1,4 @@
-// V1.1.5 vom 20.3.2020
+// V1.1.51 vom 22.3.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 
@@ -128,8 +128,10 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
     //log(getObject(SensorPraefix+Sensor[x], 'rooms').enumNames.join(', '));
     if (logging) log("reaching CheckWindow, SensorVal[" + x + "]=" + SensorVal[x] + " TempRoom=" + TempRoom)
     if ((SensorVal[x] == true || SensorVal[x] == "offen" || SensorVal[x] == "gekippt" || SensorVal[x] == "open" || SensorVal[x] == "tilted") && (SensorOldVal[x] != true || SensorOldVal[x] != "offen" || SensorOldVal[x] != "gekippt" || SensorOldVal[x] != "open" || SensorOldVal[x] != "tilted")) { //Fenster is offen
-        OpenWindowCount = OpenWindowCount + 1;
-        RoomOpenWindowCount[TempRoomIndex] = getState(praefix + TempRoom + ".RoomOpenWindowCount").val + 1;
+        OpenWindowCount++;
+        //RoomOpenWindowCount[TempRoomIndex] = getState(praefix + TempRoom + ".RoomOpenWindowCount").val + 1;
+        RoomOpenWindowCount[TempRoomIndex]++;
+
         if (logging) log("RoomOpenWindowCount für " + TempRoom + "=" + RoomOpenWindowCount[TempRoomIndex])
         setState(praefix + "AlleFensterZu", false);
         setState(praefix + TempRoom + ".IsOpen", true);
@@ -160,9 +162,9 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
         };
     }
     else {
-        OpenWindowCount = OpenWindowCount - 1;
-        //RoomOpenWindowCount[x] = getState(praefix + GetRoom(x) + ".RoomOpenWindowCount").val - 1;
-        RoomOpenWindowCount[TempRoomIndex] = getState(praefix + TempRoom + ".RoomOpenWindowCount").val - 1;
+        OpenWindowCount--;
+        //RoomOpenWindowCount[TempRoomIndex] = getState(praefix + TempRoom + ".RoomOpenWindowCount").val - 1;
+        RoomOpenWindowCount[TempRoomIndex]--;
 
         setState(praefix + "WindowsOpen", OpenWindowCount);
         setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
@@ -189,7 +191,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
             log("Alle Fenster geschlossen.");
         };
     };
-    if (logging) log(OpenWindowCount);
+    if (logging) log("Offene Fenster gesamt= "+OpenWindowCount);
 };
 
 
@@ -256,6 +258,7 @@ function CreateTrigger() {
     //Trigger für Sensoren erzeugen
     for (let x = 0; x < Sensor.length; x++) { //Alle Sensoren durchlaufen
         on(Sensor[x], function (dp) { //Trigger in Schleife erstellen
+            if (logging) log("Trigger= " + x + " Wert=" + dp.state.val + " Alter Wert= " + dp.oldState.val);
             if (dp.channelId.search(praefix) == -1) { //Ausschliessen dass das Scriptverzeichnis zum Triggern verwendet wird
                 SensorVal[x] = dp.state.val;
                 SensorOldVal[x] = dp.oldState.val;
