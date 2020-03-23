@@ -6,7 +6,7 @@
 #### Möglichkeit eine Meldung/Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung auszugeben
 
 # WICHTIG!!!
-### Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie eine Funktion, z.B. "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
+### Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie eine Funktion, z.B. "Verschluss" für jeden entsprechenden Datenpunkt. **Aber nur für den Datenpunkt, nicht den gesammten Channel!!!**
 ![fensteroffentut1.jpg](/admin/fensteroffentut1.jpg) 
 
 # Installation
@@ -17,6 +17,7 @@
 5. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie die beiden gesamt Datenpunkte welche Alle Fenster zählen und den Gesamtstatus ausgeben. All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 22.3.20 Bugfix für HM Drehgriff Sensoren, Logging erweitert
 #### 5.2.20 Fehlerabfangroutinen integriert
 #### 3.2.20 Kleinere Bugfixes und upload zu git  
 #### 1.2.20 Add: Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben.  
