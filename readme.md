@@ -17,6 +17,7 @@
 5. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie die beiden gesamt Datenpunkte welche Alle Fenster zählen und den Gesamtstatus ausgeben. All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 23.3.20 Erweiterung: Neuer Datenpunkt mit Textübersicht ausschliesslich der Räume mit geöffneten Fenstern
 #### 22.3.20 Bugfix für HM Drehgriff Sensoren, Logging erweitert
 #### 5.2.20 Fehlerabfangroutinen integriert
 #### 3.2.20 Kleinere Bugfixes und upload zu git  

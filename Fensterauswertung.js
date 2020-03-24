@@ -1,4 +1,4 @@
-// V1.1.6 vom 22.3.2020
+// V1.1.7 vom 24.3.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 
@@ -13,9 +13,9 @@ const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff 
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer
-const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden?
-const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden?
-
+const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden?
+const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden?
+const OpenWindowListSeparator="<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
 //Ab hier nix mehr ändern
 
 
@@ -35,6 +35,7 @@ function Meldung(msg) {
 
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
 let RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
+let RoomsWithOpenWindows = "";
 let OpenWindowMsgHandler = []; // Objektarray für timeouts pro Raum
 let Sensor = []; //Sensoren als Array anlegen
 let SensorVal = [];//Sensorwerte als Array anlegen
@@ -49,16 +50,14 @@ let States = [];
 let Funktionen = getEnums('functions');
 for (let x in Funktionen) {        // loop ueber alle Functions
     let Funktion = Funktionen[x].name;
-
     if (Funktion == undefined) {
         log("Keine Funktion gefunden");
     }
     else {
         if (typeof Funktion == 'object') Funktion = Funktion.de;
-        var members = Funktionen[x].members;
+        let members = Funktionen[x].members;
         if (Funktion == WelcheFunktionVerwenden) { //Wenn Function ist Verschluss
             for (let y in members) { // Loop über alle Verschluss Members
-
                 Sensor[y] = members[y];
                 let room = getObject(Sensor[y], 'rooms').enumNames[0];
                 if (typeof room == 'object') room = room.de;
@@ -69,9 +68,9 @@ for (let x in Funktionen) {        // loop ueber alle Functions
                 DpCount++;
                 //log(Funktion + ': ' + room);
                 if (RoomList.indexOf(room) == -1) { //Raumliste ohne Raumduplikate erzeugen
-                    RoomList[z] = room
-                    if (logging) log(RoomList[z])
-                    z++
+                    RoomList[z] = room;
+                    if (logging) log(RoomList[z]);
+                    z++;
                 };
                 RoomOpenWindowCount[y] = 0; // Array mit 0 initialisieren
                 Laufzeit[y] = 0; // Array mit 0 initialisieren
@@ -85,6 +84,8 @@ for (let x in Funktionen) {        // loop ueber alle Functions
 States[DpCount] = { id: praefix + "AlleFensterZu", initial: true, forceCreation: false, common: { read: true, write: true, name: "Fenster zu?", type: "boolean", role: "state", def: true } }; //
 DpCount++;
 States[DpCount] = { id: praefix + "WindowsOpen", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Anzahl der geöffneten Fenster", type: "number", def: 0 } };
+DpCount++;
+States[DpCount] = { id: praefix + "RoomsWithOpenWindows", initial: "Fenster in allen Räumen geschlossen", forceCreation: false, common: { read: true, write: true, name: "In welchen Räumen sind Fenster geöffnet?", type: "string", def: "Fenster in allen Räumen geschlossen" } };
 
 //Alle States anlegen, Main aufrufen wenn fertig
 let numStates = States.length;
@@ -107,6 +108,27 @@ function main() {
     CreateTrigger();
     CheckAllWindows(); //Bei Scriptstart alle Fenster einlesen
 };
+
+function CreateRoomsWithOpenWindowsList() { //Erzeugt Textliste mit Räumen welche geöffnete Fenster haben
+    RoomsWithOpenWindows = ""; //Liste Initialisieren
+    for (let x = 0; x < RoomList.length; x++) { //Alle Räume durchgehen
+        if (RoomOpenWindowCount[x] > 0) { // Nur Räume mit offenen Fenstern berücksichtigen
+            if (RoomOpenWindowCount[x] == 1) { //Wenn 1 Fenster offen, Singular Schreibweise
+                RoomsWithOpenWindows = RoomsWithOpenWindows + RoomList[x] + " " + RoomOpenWindowCount[x] + " offenes Fenster" + OpenWindowListSeparator;
+            }
+            else { //ansonsten Plural Schreibweise
+                RoomsWithOpenWindows = RoomsWithOpenWindows + RoomList[x] + " " + RoomOpenWindowCount[x] + " offene Fenster" + OpenWindowListSeparator;
+            };
+        };
+    };
+    RoomsWithOpenWindows = RoomsWithOpenWindows.substr(0, RoomsWithOpenWindows.length - OpenWindowListSeparator.length); //letzten <br> Umbruch wieder entfernen
+
+    if (RoomsWithOpenWindows == "") {
+        RoomsWithOpenWindows = "Alle Fenster geschlossen";
+    };
+    setState(praefix + "RoomsWithOpenWindows", RoomsWithOpenWindows);
+    if (logging) log(RoomsWithOpenWindows);
+}
 
 function GetRoom(x) { // Liefert den Raum von Sensor x
     if (logging) log("Reaching GetRoom x=" + x)
@@ -185,6 +207,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
         };
     };
     if (logging) log("Offene Fenster gesamt= " + OpenWindowCount);
+    CreateRoomsWithOpenWindowsList();
 };
 
 function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
@@ -223,20 +246,21 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
         }
         else {
             //RoomOpenWindowCount[TempRoomIndex] = getState(praefix + TempRoom + ".RoomOpenWindowCount").val - 1;
-            RoomOpenWindowCount[TempRoomIndex] = RoomOpenWindowCount[TempRoomIndex] - 1
+            RoomOpenWindowCount[TempRoomIndex]--;
             if (RoomOpenWindowCount[TempRoomIndex] < 0) RoomOpenWindowCount[TempRoomIndex] = 0;
             setState(praefix + TempRoom + ".IsOpen", false);
             setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
             log(TempRoom + " Fenster = geschlossen.");
         };
     };
-
     if (OpenWindowCount == 0) {
         setState(praefix + "AlleFensterZu", true);
         setState(praefix + "WindowsOpen", OpenWindowCount);
 
         log("Alle Fenster geschlossen.");
     };
+    CreateRoomsWithOpenWindowsList();
+
 };
 
 function SimplyfyWindowStates(x) {
