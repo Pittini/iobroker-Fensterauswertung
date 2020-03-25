@@ -5,7 +5,7 @@
 //WICHTIG!!!
 //Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie die Funktion "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
 
-const logging = true;
+const logging = true; //Erweiterte Logs ausgeben?
 const praefix = "javascript.0.FensterUeberwachung."; //Grundpfad für Script DPs
 const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten
 const RepeatInfoMsg = true; // Legt fest ob Ansage einmalig oder zyklisch
@@ -14,11 +14,11 @@ const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff 
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer
-const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden?
-const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden?
+const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Authorenfunktion, sollte deaktiviert werden.
+const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden? Authorenfunktion, sollte deaktiviert werden.
 const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
-let WindowIsOpenWhen = ["true", "offen", "gekippt", "open", "tilted", "1", "2"];
-let WindowIsClosedWhen = ["false", "closed", "0"];
+const WindowIsOpenWhen = ["true", "offen", "gekippt", "open", "tilted", "1", "2"]; // Hier können eigene States für offen angegeben werden, immer !!! in Kleinschreibung
+const WindowIsClosedWhen = ["false", "closed", "0"]; // können eigene States für geschlossen angegeben werden, immer !!! in Kleinschreibung
 
 //Ab hier nix mehr ändern
 

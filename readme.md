@@ -12,8 +12,8 @@
 # Installation
 1. Wenn noch nicht geschehen, allen gewünschten Sensoren einen Raum und eine Funktion zuweisen. Die Funktion muss vorher in den Aufzählungen hinzugefügt werden und könnte z.B. "Verschluss" lauten. Soll ein anderer Begriff verwendet werden, muss dies dann auch im Script, Zeile 11 geändert werden.
 2. Das Skript in ein neues JS Projekt kopieren.
-3. Zeile 7-11 kontrollieren und bei Bedarf anpassen
-4. Zeile 15 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
+3. Zeile 7-21 kontrollieren und bei Bedarf anpassen
+4. Zeile 14-16 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
 5. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie die beiden gesamt Datenpunkte welche Alle Fenster zählen und den Gesamtstatus ausgeben. All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
