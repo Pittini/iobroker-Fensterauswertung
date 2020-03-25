@@ -1,9 +1,10 @@
-// V1.1.7 vom 24.3.2020
+// V1.1.8 vom 25.3.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 
 //WICHTIG!!!
 //Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie die Funktion "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
+
 const logging = true;
 const praefix = "javascript.0.FensterUeberwachung."; //Grundpfad für Script DPs
 const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten
@@ -13,11 +14,13 @@ const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff 
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer
-const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden?
-const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden?
-const OpenWindowListSeparator="<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
-//Ab hier nix mehr ändern
+const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden?
+const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden?
+const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
+let WindowIsOpenWhen = ["true", "offen", "gekippt", "open", "tilted", "1", "2"];
+let WindowIsClosedWhen = ["false", "closed", "0"];
 
+//Ab hier nix mehr ändern
 
 function Meldung(msg) {
     if (UseSay) Say(msg);
@@ -32,22 +35,20 @@ function Meldung(msg) {
     if (logging) log(msg);
 };
 
-
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
-let RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
+const RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
 let RoomsWithOpenWindows = "";
-let OpenWindowMsgHandler = []; // Objektarray für timeouts pro Raum
-let Sensor = []; //Sensoren als Array anlegen
-let SensorVal = [];//Sensorwerte als Array anlegen
-let SensorOldVal = []; //Alte Sensorwerte als Array ablegen
-
-let Laufzeit = []; //Timer Laufzeit pro Fenster
-let RoomList = [];
-let z = 0;
-let DpCount = 0;
-let States = [];
-
+const OpenWindowMsgHandler = []; // Objektarray für timeouts pro Raum
+const Sensor = []; //Sensoren als Array anlegen
+const SensorVal = [];//Sensorwerte als Array anlegen
+const SensorOldVal = []; //Alte Sensorwerte als Array ablegen
+const Laufzeit = []; //Timer Laufzeit pro Fenster
+const RoomList = []; // Raumlisten Array
+let z = 0; //Zähler
+let DpCount = 0; //Zähler
+const States = []; // Array mit anzulegenden Datenpunkten
 let Funktionen = getEnums('functions');
+
 for (let x in Funktionen) {        // loop ueber alle Functions
     let Funktion = Funktionen[x].name;
     if (Funktion == undefined) {
@@ -69,7 +70,7 @@ for (let x in Funktionen) {        // loop ueber alle Functions
                 //log(Funktion + ': ' + room);
                 if (RoomList.indexOf(room) == -1) { //Raumliste ohne Raumduplikate erzeugen
                     RoomList[z] = room;
-                    if (logging) log(RoomList[z]);
+                    if (logging) log("Raum " + z + " = " + RoomList[z]);
                     z++;
                 };
                 RoomOpenWindowCount[y] = 0; // Array mit 0 initialisieren
@@ -101,12 +102,13 @@ States.forEach(function (state) {
 
 function main() {
     for (let x = 0; x < Sensor.length; x++) {
-        SensorVal[x] = getState(Sensor[x]).val; // Wert von Sensor in Schleife einlesen
-        SimplyfyWindowStates(x)
-        //log(SensorVal[x]);
+        //setTimeout(function () { // Timeout setzt refresh status wieder zurück
+        SensorVal[x] = String(getState(Sensor[x]).val).toLowerCase(); // Wert von Sensor in Schleife einlesen
+        SimplyfyWindowStates(x);
+        // }, x * 100);
     };
     CreateTrigger();
-    CheckAllWindows(); //Bei Scriptstart alle Fenster einlesen
+    //CheckAllWindows(); //Bei Scriptstart alle Fenster einlesen
 };
 
 function CreateRoomsWithOpenWindowsList() { //Erzeugt Textliste mit Räumen welche geöffnete Fenster haben
@@ -124,7 +126,7 @@ function CreateRoomsWithOpenWindowsList() { //Erzeugt Textliste mit Räumen welc
     RoomsWithOpenWindows = RoomsWithOpenWindows.substr(0, RoomsWithOpenWindows.length - OpenWindowListSeparator.length); //letzten <br> Umbruch wieder entfernen
 
     if (RoomsWithOpenWindows == "") {
-        RoomsWithOpenWindows = "Alle Fenster geschlossen";
+        RoomsWithOpenWindows = "Alle Fenster sind geschlossen";
     };
     setState(praefix + "RoomsWithOpenWindows", RoomsWithOpenWindows);
     if (logging) log(RoomsWithOpenWindows);
@@ -144,7 +146,7 @@ function GetRoom(x) { // Liefert den Raum von Sensor x
 function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
     let TempRoom = GetRoom(x); //Raum des aktuellen Sensors bestimmen
     let TempRoomIndex = RoomList.indexOf(TempRoom); // Raumlistenindex für aktuellen Raum bestimmen
-    if (logging) log("reaching CheckWindow, SensorVal[" + x + "]=" + SensorVal[x] + " TempRoom=" + TempRoom)
+    if (logging) log("reaching CheckWindow, SensorVal[" + x + "]=" + SensorVal[x] + " SensorOldVal=" + SensorOldVal[x] + " TempRoom=" + TempRoom)
     if (SensorVal[x] == "open" && SensorOldVal[x] != "open") { //Fenster war geschlossen und wurde geöffnet
         OpenWindowCount++;
         RoomOpenWindowCount[TempRoomIndex]++;
@@ -179,8 +181,8 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
         };
     }
     else if (SensorVal[x] == "closed") {
-        OpenWindowCount--;
-        RoomOpenWindowCount[TempRoomIndex]--;
+        if (OpenWindowCount > 0) OpenWindowCount--;
+        if (RoomOpenWindowCount[TempRoomIndex] > 0) RoomOpenWindowCount[TempRoomIndex]--;
 
         setState(praefix + "WindowsOpen", OpenWindowCount);
         setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
@@ -241,16 +243,15 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
                     }, ZeitBisNachricht);
                 };
             };
-
-            log(TempRoom + " Fenster = geöffnet");
+            if (logging) log(TempRoom + " Fenster = geöffnet");
         }
-        else {
+        else if (SensorVal[x] == "closed") {
             //RoomOpenWindowCount[TempRoomIndex] = getState(praefix + TempRoom + ".RoomOpenWindowCount").val - 1;
             RoomOpenWindowCount[TempRoomIndex]--;
             if (RoomOpenWindowCount[TempRoomIndex] < 0) RoomOpenWindowCount[TempRoomIndex] = 0;
             setState(praefix + TempRoom + ".IsOpen", false);
             setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
-            log(TempRoom + " Fenster = geschlossen.");
+            //log(TempRoom + " Fenster = geschlossen.");
         };
     };
     if (OpenWindowCount == 0) {
@@ -260,21 +261,27 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
         log("Alle Fenster geschlossen.");
     };
     CreateRoomsWithOpenWindowsList();
-
 };
 
-function SimplyfyWindowStates(x) {
-    if (SensorVal[x] == true || SensorVal[x] == "offen" || SensorVal[x] == "gekippt" || SensorVal[x] == "open" || SensorVal[x] == "tilted") {
+function SimplyfyWindowStates(x) { //Die verschiedenen Gerätestates zu open oder close vereinfachen
+    //log("Sensor "+Sensor[x]+" mit Wert "+ SensorVal[x]+ " hat Typ " + typeof(SensorVal[x] ));
+    if (WindowIsOpenWhen.indexOf(SensorVal[x]) != -1) { // Suche in Fensteroffenarray, wenn gefunden, Status auf open setzen
         SensorVal[x] = "open";
     }
-    else {
+    else if (WindowIsClosedWhen.indexOf(SensorVal[x]) != -1) { // Suche in Fenstergeschlossenarray, wenn gefunden, Status auf closed setzen
         SensorVal[x] = "closed";
     };
 
-    if (SensorOldVal[x] == true || SensorOldVal[x] == "offen" || SensorOldVal[x] == "gekippt" || SensorOldVal[x] == "open" || SensorOldVal[x] == "tilted") {
+    if (SensorVal[x] != "open" && SensorVal[x] != "closed") {
+        // Suche in Fensteroffenarray und Fenstergeschlossenarray, wenn nirgends gefunden, Status auf closed setzen und Logwarnung ausgeben
+        log("Unknown Windowstate " + SensorVal[x] + " detected at " + Sensor[x] + ", please check your configuration", "warn");
+        SensorVal[x] = "unknown";
+    };
+
+    if (WindowIsOpenWhen.indexOf(SensorOldVal[x]) != -1) {
         SensorOldVal[x] = "open";
     }
-    else {
+    else if (WindowIsClosedWhen.indexOf(SensorOldVal[x]) != -1) {
         SensorOldVal[x] = "closed";
     };
 }
@@ -283,10 +290,10 @@ function CreateTrigger() {
     //Trigger für Sensoren erzeugen
     for (let x = 0; x < Sensor.length; x++) { //Alle Sensoren durchlaufen
         on(Sensor[x], function (dp) { //Trigger in Schleife erstellen
-            if (logging) log("Trigger= " + x + " Wert=" + dp.state.val + " Alter Wert= " + dp.oldState.val);
+            if (logging) log("Trigger= " + x + " Wert= " + dp.state.val + " Alter Wert= " + dp.oldState.val);
             if (dp.channelId.search(praefix) == -1) { //Ausschliessen dass das Scriptverzeichnis zum Triggern verwendet wird
-                SensorVal[x] = dp.state.val;
-                SensorOldVal[x] = dp.oldState.val;
+                SensorVal[x] = String(dp.state.val).toLowerCase(); // Alles in String und Kleinschreibweise wandeln
+                SensorOldVal[x] = String(dp.oldState.val).toLowerCase(); // Alles in String und Kleinschreibweise wandeln
                 SimplyfyWindowStates(x);
                 CheckWindow(x);
             }
