@@ -20,11 +20,11 @@ const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der 
 const WindowIsOpenWhen = ["true", "offen", "gekippt", "open", "tilted", "1", "2"]; // Hier können eigene States für offen angegeben werden, immer !!! in Kleinschreibung
 const WindowIsClosedWhen = ["false", "closed", "0"]; // können eigene States für geschlossen angegeben werden, immer !!! in Kleinschreibung
 
-const WindowOpenImg = "/icons-mfd-svg/fts_window_1w_open.svg";
-const WindowCloseImg = "/icons-mfd-svg/fts_window_1w.svg";
-const OpenWindowColor = "red";
-const ClosedWindowColor = "green";
-
+const WindowOpenImg = "/icons-mfd-svg/fts_window_1w_open.svg"; //Icon für Fenster offen
+const WindowCloseImg = "/icons-mfd-svg/fts_window_1w.svg"; // Icon für Fenster geschlossen
+const OpenWindowColor = "red"; // Farbe für Fenster offen
+const ClosedWindowColor = "green"; // Farbe für Fenster geschlossen
+const HeadlessTable = true; // Tabelle mit oder ohne Kopf darstellen
 //Ab hier nix mehr ändern
 
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
@@ -121,13 +121,15 @@ function Meldung(msg) {
 }
 
 function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML Tabelle    
-//Tabellenüberschrift und Head
-    let OverviewTable = "<table style='width:100%; border-collapse: collapse; border: 0px solid black;'><caption><div style='height: 20px; padding-top: 10px; padding-bottom: 5px; font-size:1.4em; font-weight: bold;'>Fensterstatus</div></caption>"
-    OverviewTable = OverviewTable + "<thead><tr><th width='100%' style='text-align:center; padding-bottom: 5px;'>" + RoomsWithOpenWindows + "</th></tr></thead><tbody></tbody></table>"
-
-//Tabelle der Raumdetails
-    OverviewTable = OverviewTable + "<div style='height: 100%; overflow-y:auto;'><table style='width:100%; border-collapse: collapse;'>"
-    OverviewTable = OverviewTable + "<thead><tr><th width='40px' style='text-align:left;'</th><th width='20px' style='text-align:center;'></th><th width='' style='text-align:left;'></th></tr></thead><tbody>"
+    //Tabellenüberschrift und Head
+    let OverviewTable = "";
+    if (!HeadlessTable) {
+        OverviewTable = "<table style='width:100%; border-collapse: collapse; border: 0px solid black;'><caption><div style='height: 40px; padding-top: 10px; padding-bottom: 5px; font-size:1.4em; font-weight: bold;'>Fensterstatus</div></caption>";
+        OverviewTable = OverviewTable + "<thead><tr><th width='100%' style='text-align:center; height: 20px; padding-bottom: 5px;'>" + RoomsWithOpenWindows + "</th></tr></thead><tbody></tbody></table>";
+    };
+    //Tabelle der Raumdetails
+    OverviewTable = OverviewTable + "<div style='height: 100%; overflow-y:auto; overflow-x:hidden;'><table style='width:100%; border-collapse: collapse;'>";
+    OverviewTable = OverviewTable + "<thead><tr><th width='40px' style='text-align:left;'</th><th width='20px' style='text-align:center;'></th><th style='text-align:left;'></th></tr></thead><tbody>";
 
 
     for (let x = 0; x < RoomList.length; x++) { //Alle Räume durchgehen
@@ -176,7 +178,7 @@ function GetRoom(x) { // Liefert den Raum von Sensor x
     if (logging) log("Reaching GetRoom x=" + x)
     let room = getObject(Sensor[x], 'rooms').enumNames[0];
     if (room == undefined) {
-        log("Kein Raum definiert", 'error');
+        log("Kein Raum definiert bei Sensor " + Sensor[x], 'error');
         return "Kein Raum definiert";
     };
     if (typeof room == 'object') room = room.de;
@@ -259,7 +261,7 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
         if (SensorVal[x] == "open") { //Fenster is offen
             OpenWindowCount = OpenWindowCount + 1;
             RoomOpenWindowCount[TempRoomIndex] = RoomOpenWindowCount[TempRoomIndex] + 1;
-            if(logging) log("Temproom= " + TempRoom + " TempRoomIndex= " + RoomList.indexOf(TempRoom) + "  RoomOpenWindowcount= " + RoomOpenWindowCount[TempRoomIndex]);
+            if (logging) log("Temproom= " + TempRoom + " TempRoomIndex= " + RoomList.indexOf(TempRoom) + "  RoomOpenWindowcount= " + RoomOpenWindowCount[TempRoomIndex]);
 
             setState(praefix + "AlleFensterZu", false);
             setState(praefix + "WindowsOpen", OpenWindowCount);
