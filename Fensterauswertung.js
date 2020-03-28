@@ -1,7 +1,7 @@
-// V1.1.8 vom 25.3.2020
+// V1.2 vom 28.3.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
-
+//Dynamische erzeugung einer HTML Übersichtstabelle
 //WICHTIG!!!
 //Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie die Funktion "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
 
@@ -20,20 +20,12 @@ const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der 
 const WindowIsOpenWhen = ["true", "offen", "gekippt", "open", "tilted", "1", "2"]; // Hier können eigene States für offen angegeben werden, immer !!! in Kleinschreibung
 const WindowIsClosedWhen = ["false", "closed", "0"]; // können eigene States für geschlossen angegeben werden, immer !!! in Kleinschreibung
 
-//Ab hier nix mehr ändern
+const WindowOpenImg = "/icons-mfd-svg/fts_window_1w_open.svg";
+const WindowCloseImg = "/icons-mfd-svg/fts_window_1w.svg";
+const OpenWindowColor = "red";
+const ClosedWindowColor = "green";
 
-function Meldung(msg) {
-    if (UseSay) Say(msg);
-    if (UseTelegram) {
-        sendTo("telegram.0", "send", {
-            text: msg
-        });
-    };
-    if (UseAlexa) {
-        if (AlexaId != "") setState("alexa2.0.Echo-Devices." + AlexaId + ".Commands.announcement"/*announcement*/, msg);
-    };
-    if (logging) log(msg);
-};
+//Ab hier nix mehr ändern
 
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
 const RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
@@ -44,6 +36,7 @@ const SensorVal = [];//Sensorwerte als Array anlegen
 const SensorOldVal = []; //Alte Sensorwerte als Array ablegen
 const Laufzeit = []; //Timer Laufzeit pro Fenster
 const RoomList = []; // Raumlisten Array
+const RoomStateTimeStamp = [];
 let z = 0; //Zähler
 let DpCount = 0; //Zähler
 const States = []; // Array mit anzulegenden Datenpunkten
@@ -87,6 +80,8 @@ DpCount++;
 States[DpCount] = { id: praefix + "WindowsOpen", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Anzahl der geöffneten Fenster", type: "number", def: 0 } };
 DpCount++;
 States[DpCount] = { id: praefix + "RoomsWithOpenWindows", initial: "Fenster in allen Räumen geschlossen", forceCreation: false, common: { read: true, write: true, name: "In welchen Räumen sind Fenster geöffnet?", type: "string", def: "Fenster in allen Räumen geschlossen" } };
+DpCount++;
+States[DpCount] = { id: praefix + "OverviewTable", initial: "", forceCreation: false, common: { read: true, write: true, name: "Übersicht aller Räume und geöffneten Fenster", type: "string", def: "" } };
 
 //Alle States anlegen, Main aufrufen wenn fertig
 let numStates = States.length;
@@ -108,8 +103,53 @@ function main() {
         // }, x * 100);
     };
     CreateTrigger();
-    //CheckAllWindows(); //Bei Scriptstart alle Fenster einlesen
-};
+    CheckAllWindows(); //Bei Scriptstart alle Fenster einlesen
+    CreateOverviewTable()
+}
+
+function Meldung(msg) {
+    if (UseSay) Say(msg);
+    if (UseTelegram) {
+        sendTo("telegram.0", "send", {
+            text: msg
+        });
+    };
+    if (UseAlexa) {
+        if (AlexaId != "") setState("alexa2.0.Echo-Devices." + AlexaId + ".Commands.announcement"/*announcement*/, msg);
+    };
+    if (logging) log(msg);
+}
+
+function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML Tabelle    
+//Tabellenüberschrift und Head
+    let OverviewTable = "<table style='width:100%; border-collapse: collapse; border: 0px solid black;'><caption><div style='height: 20px; padding-top: 10px; padding-bottom: 5px; font-size:1.4em; font-weight: bold;'>Fensterstatus</div></caption>"
+    OverviewTable = OverviewTable + "<thead><tr><th width='100%' style='text-align:center; padding-bottom: 5px;'>" + RoomsWithOpenWindows + "</th></tr></thead><tbody></tbody></table>"
+
+//Tabelle der Raumdetails
+    OverviewTable = OverviewTable + "<div style='height: 100%; overflow-y:auto;'><table style='width:100%; border-collapse: collapse;'>"
+    OverviewTable = OverviewTable + "<thead><tr><th width='40px' style='text-align:left;'</th><th width='20px' style='text-align:center;'></th><th width='' style='text-align:left;'></th></tr></thead><tbody>"
+
+
+    for (let x = 0; x < RoomList.length; x++) { //Alle Räume durchgehen
+
+        if (RoomOpenWindowCount[x] > 0) { // Räume mit offenen Fenstern
+            RoomStateTimeStamp[x] = formatDate(getState(praefix + RoomList[x] + ".IsOpen").lc, "SS:mm:ss TT.MM.JJJJ")
+            OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + OpenWindowColor + ";'><img height=40px src='" + WindowOpenImg + "'></td>"
+            OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; text-align:center;background-color:" + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
+            OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; background-color:" + OpenWindowColor + ";'>" + RoomList[x] + "<br><div style='font-size:0.8em; font-weight:bold;'>geöffnet: " + RoomStateTimeStamp[x] + "</div></td></tr>"
+        }
+        else { // Geschlossene Räume
+            RoomStateTimeStamp[x] = formatDate(getState(praefix + RoomList[x] + ".IsOpen").lc, "SS:mm:ss TT.MM.JJJJ")
+            OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + ClosedWindowColor + ";'><img height=40px src='" + WindowCloseImg + "'></td>"
+            OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; text-align:center; background-color:" + ClosedWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
+            OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; background-color:" + ClosedWindowColor + ";'>" + RoomList[x] + "<br><div style='font-size:0.7em; font-weight:normal;'>geschlossen: " + RoomStateTimeStamp[x] + "</div></td></tr>"
+
+        };
+    };
+    OverviewTable = OverviewTable + "</tbody></table></div>";
+    setState(praefix + "OverviewTable", OverviewTable);
+    //log(OverviewTable);
+}
 
 function CreateRoomsWithOpenWindowsList() { //Erzeugt Textliste mit Räumen welche geöffnete Fenster haben
     RoomsWithOpenWindows = ""; //Liste Initialisieren
@@ -141,7 +181,7 @@ function GetRoom(x) { // Liefert den Raum von Sensor x
     };
     if (typeof room == 'object') room = room.de;
     return room;
-};
+}
 
 function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
     let TempRoom = GetRoom(x); //Raum des aktuellen Sensors bestimmen
@@ -150,8 +190,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
     if (SensorVal[x] == "open" && SensorOldVal[x] != "open") { //Fenster war geschlossen und wurde geöffnet
         OpenWindowCount++;
         RoomOpenWindowCount[TempRoomIndex]++;
-
-        if (logging) log("RoomOpenWindowCount für " + TempRoom + "=" + RoomOpenWindowCount[TempRoomIndex])
+        if (logging) log("RoomOpenWindowCount für " + TempRoom + "=" + RoomOpenWindowCount[TempRoomIndex]);
         setState(praefix + "AlleFensterZu", false);
         setState(praefix + TempRoom + ".IsOpen", true);
         setState(praefix + "WindowsOpen", OpenWindowCount);
@@ -202,7 +241,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
             };
         };
 
-        if (OpenWindowCount == 0) {
+        if (OpenWindowCount == 0) { //Wenn kein Fenster mehr offen
             setState(praefix + "AlleFensterZu", true);
             setState(praefix + TempRoom + ".IsOpen", false);
             log("Alle Fenster geschlossen.");
@@ -210,17 +249,17 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
     };
     if (logging) log("Offene Fenster gesamt= " + OpenWindowCount);
     CreateRoomsWithOpenWindowsList();
-};
+    CreateOverviewTable();
+}
 
 function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
     for (let x = 0; x < Sensor.length; x++) { //Alle Sensoren durchlaufen
         let TempRoom = GetRoom(x);
         let TempRoomIndex = RoomList.indexOf(TempRoom);
-        //if (logging) log(TempRoom);
         if (SensorVal[x] == "open") { //Fenster is offen
             OpenWindowCount = OpenWindowCount + 1;
             RoomOpenWindowCount[TempRoomIndex] = RoomOpenWindowCount[TempRoomIndex] + 1;
-            log("Temproom= " + TempRoom + " TempRoomIndex= " + RoomList.indexOf(TempRoom) + "  RoomOpenWindowcount= " + RoomOpenWindowCount[TempRoomIndex]);
+            if(logging) log("Temproom= " + TempRoom + " TempRoomIndex= " + RoomList.indexOf(TempRoom) + "  RoomOpenWindowcount= " + RoomOpenWindowCount[TempRoomIndex]);
 
             setState(praefix + "AlleFensterZu", false);
             setState(praefix + "WindowsOpen", OpenWindowCount);
@@ -261,7 +300,7 @@ function CheckAllWindows() { //Prüft bei Programmstart alle Fenster
         log("Alle Fenster geschlossen.");
     };
     CreateRoomsWithOpenWindowsList();
-};
+}
 
 function SimplyfyWindowStates(x) { //Die verschiedenen Gerätestates zu open oder close vereinfachen
     //log("Sensor "+Sensor[x]+" mit Wert "+ SensorVal[x]+ " hat Typ " + typeof(SensorVal[x] ));
@@ -272,8 +311,7 @@ function SimplyfyWindowStates(x) { //Die verschiedenen Gerätestates zu open ode
         SensorVal[x] = "closed";
     };
 
-    if (SensorVal[x] != "open" && SensorVal[x] != "closed") {
-        // Suche in Fensteroffenarray und Fenstergeschlossenarray, wenn nirgends gefunden, Status auf closed setzen und Logwarnung ausgeben
+    if (SensorVal[x] != "open" && SensorVal[x] != "closed") { // Suche in Fensteroffenarray und Fenstergeschlossenarray, wenn nirgends gefunden, Status auf closed setzen und Logwarnung ausgeben
         log("Unknown Windowstate " + SensorVal[x] + " detected at " + Sensor[x] + ", please check your configuration", "warn");
         SensorVal[x] = "unknown";
     };
@@ -316,4 +354,4 @@ function CreateTrigger() {
 
         };
     }, 100);
-};
+}

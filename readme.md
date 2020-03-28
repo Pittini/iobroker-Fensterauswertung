@@ -4,6 +4,7 @@
 #### Berücksichtigt mehrflügelige Fenster bzw. mehrere Fenster pro Raum.
 #### Legt pro Raum zwei Datenpunkte an (Raumfensteroffenzähler und Raumfensterstatus), sowie zwei Datenpunkte fürs gesamte.
 #### Möglichkeit eine Meldung/Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung auszugeben
+#### Gibt dynamische HTML Tabelle mit Übersicht aller Räume aus
 
 # WICHTIG!!!
 ### Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie eine Funktion, z.B. "Verschluss" für jeden entsprechenden Datenpunkt. **Aber nur für den Datenpunkt, nicht den gesammten Channel!!!**
@@ -14,13 +15,23 @@
 2. Das Skript in ein neues JS Projekt kopieren.
 3. Zeile 7-21 kontrollieren und bei Bedarf anpassen
 4. Zeile 14-16 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
-5. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie die beiden gesamt Datenpunkte welche Alle Fenster zählen und den Gesamtstatus ausgeben. All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
+5. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie 4 weitere Datenpunkte:
+* AlleFensterZu: Gesamtstatus aller Räume/Fenster
+* OverviewTable: Dynamisch erzeugte HTML Tabelle mit allen Räumen und den jeweiligen Fensterstati. Verwendung in Vis als Binding: **{javascript.0.FensterUeberwachung.OverviewTable}** in einem HTML Widget.
+Es werden zwei Icon aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 23 und 24 angepasst werden. Sieht dann z.B. so aus:  
+![fensteroffentut2.png](/admin/fensteroffentut2.png)  
+
+* RoomsWithOpenWindows: Textfeld mit Räumen in denen Fenster geöffnet sind, inkl. deren Anzahl. Als Trennzeichen wird hier ein HTML Umbruch (<br) verwendet, dies ist im Skript konfigurierbar.
+*  WindowsOpen: Die Anzahl der gesamt geöffneten Fenster.   
+
+All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
-#### 25.3.20 Add: HMIP Drehgriffe integriert; Statebezeichnungen für auf/zu jetzt User-konfigurierbar -erweiterbar
-#### 23.3.20 Add: Neuer Datenpunkt mit Textübersicht ausschliesslich der Räume mit geöffneten Fenstern
+#### 28.3.20 Add: Dynamisch erstellte HTML Übersichtstabelle über alle Räume/Fenster  
+#### 25.3.20 Add: HMIP Drehgriffe integriert; Statebezeichnungen für auf/zu jetzt User-konfigurierbar -erweiterbar  
+#### 23.3.20 Add: Neuer Datenpunkt mit Textübersicht ausschliesslich der Räume mit geöffneten Fenstern  
 #### 22.3.20 Bugfix für HM Drehgriff Sensoren, Logging erweitert
-#### 5.2.20 Add: Fehlerabfangroutinen integriert
+#### 5.2.20 Add: Fehlerabfangroutinen integriert  
 #### 3.2.20 Kleinere Bugfixes und upload zu git  
 #### 1.2.20 Add: Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben.  
 #### 14.1.20 Add: "Offen" erweitert um "Open", "Tilted", "Gekippt"  
