@@ -24,7 +24,7 @@ const WindowOpenImg = "/icons-mfd-svg/fts_window_1w_open.svg"; //Icon für Fenst
 const WindowCloseImg = "/icons-mfd-svg/fts_window_1w.svg"; // Icon für Fenster geschlossen
 const OpenWindowColor = "red"; // Farbe für Fenster offen
 const ClosedWindowColor = "green"; // Farbe für Fenster geschlossen
-const HeadlessTable = true; // Tabelle mit oder ohne Kopf darstellen
+const HeadlessTable = false; // Tabelle mit oder ohne Kopf darstellen
 //Ab hier nix mehr ändern
 
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
