@@ -5,7 +5,8 @@
 //WICHTIG!!!
 //Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie die Funktion "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
 
-const logging = true; //Erweiterte Logs ausgeben?
+//Grundeinstellungen
+const logging = false; //Erweiterte Logs ausgeben?
 const praefix = "javascript.0.FensterUeberwachung."; //Grundpfad für Script DPs
 const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten
 const RepeatInfoMsg = true; // Legt fest ob Ansage einmalig oder zyklisch
@@ -20,12 +21,15 @@ const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der 
 const WindowIsOpenWhen = ["true", "offen", "gekippt", "open", "tilted", "1", "2"]; // Hier können eigene States für offen angegeben werden, immer !!! in Kleinschreibung
 const WindowIsClosedWhen = ["false", "closed", "0"]; // können eigene States für geschlossen angegeben werden, immer !!! in Kleinschreibung
 
+//Einstellungen zur Tabellenausgabe
 const WindowOpenImg = "/icons-mfd-svg/fts_window_1w_open.svg"; //Icon für Fenster offen
 const WindowCloseImg = "/icons-mfd-svg/fts_window_1w.svg"; // Icon für Fenster geschlossen
 const OpenWindowColor = "red"; // Farbe für Fenster offen
 const ClosedWindowColor = "green"; // Farbe für Fenster geschlossen
 const HeadlessTable = false; // Tabelle mit oder ohne Kopf darstellen
-//Ab hier nix mehr ändern
+
+
+//Ab hier nix mehr ändern!
 
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
 const RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
