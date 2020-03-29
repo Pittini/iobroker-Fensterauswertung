@@ -18,8 +18,11 @@
 5. Skript starten
 6. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie 4 weitere Datenpunkte:
 * AlleFensterZu: Gesamtstatus aller Räume/Fenster
-* OverviewTable: Dynamisch erzeugte HTML Tabelle mit allen Räumen und den jeweiligen Fensterstati. Verwendung in Vis als Binding: **{javascript.0.FensterUeberwachung.OverviewTable}** in einem HTML Widget.
-Es werden zwei Icon aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 23 und 24 angepasst werden. Sieht dann z.B. so aus:  
+* OverviewTable: Dynamisch erzeugte HTML Tabelle mit allen Räumen und den jeweiligen Fensterstati. Verwendung in Vis als Binding: **{javascript.0.FensterUeberwachung.OverviewTable}** in einem HTML Widget, optimale Breite 310px, Hintergrundfarbe nach Wahl.  
+ 
+![fensteroffentut3.jpg](/admin/fensteroffentut3.jpg) 
+
+Es werden zwei Icon aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen (wird als Adapter installiert) oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 23 und 24 angepasst werden. Sieht dann z.B. so aus:  
 ![fensteroffentut2.png](/admin/fensteroffentut2.png)  
 
 * RoomsWithOpenWindows: Textfeld mit Räumen in denen Fenster geöffnet sind, inkl. deren Anzahl. Als Trennzeichen wird hier ein HTML Umbruch (<br) verwendet, dies ist im Skript konfigurierbar.
