@@ -13,6 +13,8 @@
 # Installation
 1. Wenn noch nicht geschehen, allen gewünschten Sensoren einen Raum und eine Funktion zuweisen. Die Funktion muss vorher in den Aufzählungen hinzugefügt werden und könnte z.B. "Verschluss" lauten. Soll ein anderer Begriff verwendet werden, muss dies dann auch im Script, Zeile 11 geändert werden. **Nach der Zuweisung, bzw. dem anlegen neuer Aufzählungspunkte ist es oft hilfreich die JS Instanz neu zu starten da diese bei Aufzählungsänderungen gerne mal "zickt" was dann zu Skriptfehlern führt**.
 2. Das Skript in ein neues JS Projekt kopieren.
+![fensteroffentut4.jpg](/admin/fensteroffentut4.jpg) 
+![fensteroffentut5.jpg](/admin/fensteroffentut5.jpg) 
 3. Zeile 9-29 kontrollieren und bei Bedarf anpassen, siehe Beschreibungen direkt neben den Variablen.
 4. Zeile 15-17 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
 5. Skript starten
