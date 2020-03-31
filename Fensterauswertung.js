@@ -1,4 +1,4 @@
-// V1.2.1 vom 30.3.2020
+// V1.2.2 vom 30.3.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -18,6 +18,7 @@ const AlexaId = ""; // Die Alexa Seriennummer
 const UseMail = false; //Nachricht via Mail versenden
 const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Authorenfunktion, sollte deaktiviert werden.
 const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Authorenfunktion, sollte deaktiviert werden.
+const AlsoMsgWinOpenClose = false; //Soll auch das erstmalige öffnen, sowie das schliessen gemeldet werden?
 const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
 const WindowIsOpenWhen = ["true", "offen", "gekippt", "open", "tilted", "1", "2"]; // Hier können eigene States für offen angegeben werden, immer !!! in Kleinschreibung
 const WindowIsClosedWhen = ["false", "closed", "0"]; // können eigene States für geschlossen angegeben werden, immer !!! in Kleinschreibung
@@ -125,7 +126,7 @@ function Meldung(msg) {
     if (UseMail) {
         sendTo("email", msg);
     };
-    if (logging) log(msg);
+    if (logging) log("Msg= " + msg);
 }
 
 function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML Tabelle    
@@ -207,6 +208,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
         setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
 
         if (logging) log(TempRoom + " Fenster geöffnet");
+        if (AlsoMsgWinOpenClose) Meldung(TempRoom + " Fenster geöffnet!");
         if (UseEventLog == true) WriteEventLog(TempRoom + " Fenster geöffnet!");
         if (RoomOpenWindowCount[TempRoomIndex] == 1) {
             Laufzeit[TempRoomIndex] = 0;
@@ -216,14 +218,14 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
 
                     OpenWindowMsgHandler[TempRoomIndex] = setInterval(function () {
                         Laufzeit[TempRoomIndex] = Laufzeit[TempRoomIndex] + ZeitBisNachricht;
-                        Meldung(TempRoom + "fenster seit " + Laufzeit[TempRoomIndex] / 1000 / 60 + " Minuten geöffnet!");
+                        Meldung(TempRoom + "fenster seit " + (Laufzeit[TempRoomIndex] / 1000 / 60).toFixed(1) + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 }
                 else { // Wenn einmalige Meldung eingestellt
                     if (logging) log("Setting Timeout to Room:" + TempRoom);
 
                     OpenWindowMsgHandler[TempRoomIndex] = setTimeout(function () {
-                        Meldung(TempRoom + "fenster seit " + ZeitBisNachricht / 1000 / 60 + " Minuten geöffnet!");
+                        Meldung(TempRoom + "fenster seit " + (ZeitBisNachricht / 1000 / 60).toFixed(1) + " Minuten geöffnet!");
                     }, ZeitBisNachricht);
                 };
             };
@@ -237,6 +239,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
         setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
 
         log(TempRoom + " Fenster geschlossen.");
+        if (AlsoMsgWinOpenClose) Meldung(TempRoom + " Fenster geschlossen!");
         if (UseEventLog == true) WriteEventLog(TempRoom + " Fenster geschlossen!");
         if (RoomOpenWindowCount[TempRoomIndex] == 0) {
             setState(praefix + TempRoom + ".IsOpen", false);

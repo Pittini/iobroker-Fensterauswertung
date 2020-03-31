@@ -33,7 +33,10 @@ Es werden zwei Icon aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
-#### 31.3.20 Add: Benachrichtigung via Mail hinzugefügt
+#### 31.3.20 
+- Add: Benachrichtigung via Mail hinzugefügt.  
+ - Add: Option hinzugefügt um auch erstmaliges öffnen sowie schliessen zu melden.
+- Change: Zeitausgaben werden nun auf eine Nachkommastelle gerundet.
 #### 29.3.20 Add: Möglichkeit integriert die Tabelle ohne Kopf darzustellen
 #### 28.3.20 Add: Dynamisch erstellte HTML Übersichtstabelle über alle Räume/Fenster  
 #### 25.3.20 Add: HMIP Drehgriffe integriert; Statebezeichnungen für auf/zu jetzt User-konfigurierbar -erweiterbar  
