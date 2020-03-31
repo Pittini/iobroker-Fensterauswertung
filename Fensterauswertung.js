@@ -123,7 +123,7 @@ function Meldung(msg) {
         if (AlexaId != "") setState("alexa2.0.Echo-Devices." + AlexaId + ".Commands.announcement"/*announcement*/, msg);
     };
     if (UseMail) {
-        sendTo("email", "msg");
+        sendTo("email", msg);
     };
     if (logging) log(msg);
 }
