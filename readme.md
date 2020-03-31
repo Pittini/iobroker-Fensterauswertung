@@ -3,7 +3,7 @@
 #### Kann beliebige Tür/Fenster Kontakte verwenden.
 #### Berücksichtigt mehrflügelige Fenster bzw. mehrere Fenster pro Raum.
 #### Legt pro Raum zwei Datenpunkte an (Raumfensteroffenzähler und Raumfensterstatus), sowie vier Datenpunkte fürs gesamte.
-#### Möglichkeit eine Meldung/Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung auszugeben.
+#### Möglichkeit eine Meldung/Ansage via Mail/Telegram/Alexa nach x Minuten einmalig oder zyklisch bis Fensterschließung auszugeben.
 #### Gibt dynamische HTML Tabelle mit Übersicht aller Räume aus.
 
 # WICHTIG!!!
@@ -16,7 +16,7 @@
 ![fensteroffentut4.jpg](/admin/fensteroffentut4.jpg) 
 ![fensteroffentut5.jpg](/admin/fensteroffentut5.jpg) 
 3. Zeile 9-29 kontrollieren und bei Bedarf anpassen, siehe Beschreibungen direkt neben den Variablen.
-4. Zeile 15-17 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
+4. Zeile 15-18 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
 5. Skript starten
 6. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie 4 weitere Datenpunkte:
 * AlleFensterZu: Gesamtstatus aller Räume/Fenster
@@ -33,6 +33,7 @@ Es werden zwei Icon aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 31.3.20 Add: Benachrichtigung via Mail hinzugefügt
 #### 29.3.20 Add: Möglichkeit integriert die Tabelle ohne Kopf darzustellen
 #### 28.3.20 Add: Dynamisch erstellte HTML Übersichtstabelle über alle Räume/Fenster  
 #### 25.3.20 Add: HMIP Drehgriffe integriert; Statebezeichnungen für auf/zu jetzt User-konfigurierbar -erweiterbar  

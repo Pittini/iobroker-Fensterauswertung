@@ -1,4 +1,4 @@
-// V1.2 vom 30.3.2020
+// V1.2.1 vom 30.3.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -15,8 +15,9 @@ const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff 
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer
-const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Muß deaktiviert werden.
-const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Muß deaktiviert werden.
+const UseMail = false; //Nachricht via Mail versenden
+const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Authorenfunktion, sollte deaktiviert werden.
+const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Authorenfunktion, sollte deaktiviert werden.
 const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
 const WindowIsOpenWhen = ["true", "offen", "gekippt", "open", "tilted", "1", "2"]; // Hier können eigene States für offen angegeben werden, immer !!! in Kleinschreibung
 const WindowIsClosedWhen = ["false", "closed", "0"]; // können eigene States für geschlossen angegeben werden, immer !!! in Kleinschreibung
@@ -121,6 +122,9 @@ function Meldung(msg) {
     if (UseAlexa) {
         if (AlexaId != "") setState("alexa2.0.Echo-Devices." + AlexaId + ".Commands.announcement"/*announcement*/, msg);
     };
+    if (UseMail) {
+        sendTo("email", "msg");
+    };
     if (logging) log(msg);
 }
 
@@ -139,13 +143,13 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
     for (let x = 0; x < RoomList.length; x++) { //Alle Räume durchgehen
 
         if (RoomOpenWindowCount[x] > 0) { // Räume mit offenen Fenstern
-            RoomStateTimeStamp[x] = formatDate(getState(praefix + RoomList[x] + ".IsOpen").lc, "SS:mm:ss TT.MM.JJJJ")
+            RoomStateTimeStamp[x] = formatDate(getState(praefix + RoomList[x] + ".IsOpen").lc, "SS:mm:ss TT.MM.JJJJ");
             OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + OpenWindowColor + ";'><img height=40px src='" + WindowOpenImg + "'></td>"
             OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; text-align:center;background-color:" + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
             OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; background-color:" + OpenWindowColor + ";'>" + RoomList[x] + "<br><div style='font-size:0.8em; font-weight:bold;'>geöffnet: " + RoomStateTimeStamp[x] + "</div></td></tr>"
         }
         else { // Geschlossene Räume
-            RoomStateTimeStamp[x] = formatDate(getState(praefix + RoomList[x] + ".IsOpen").lc, "SS:mm:ss TT.MM.JJJJ")
+            RoomStateTimeStamp[x] = formatDate(getState(praefix + RoomList[x] + ".IsOpen").lc, "SS:mm:ss TT.MM.JJJJ");
             OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + ClosedWindowColor + ";'><img height=40px src='" + WindowCloseImg + "'></td>"
             OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; text-align:center; background-color:" + ClosedWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
             OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; background-color:" + ClosedWindowColor + ";'>" + RoomList[x] + "<br><div style='font-size:0.7em; font-weight:normal;'>geschlossen: " + RoomStateTimeStamp[x] + "</div></td></tr>"
