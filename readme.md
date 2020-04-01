@@ -15,7 +15,7 @@
 2. Das Skript in ein neues JS Projekt kopieren.
 ![fensteroffentut4.jpg](/admin/fensteroffentut4.jpg) 
 ![fensteroffentut5.jpg](/admin/fensteroffentut5.jpg) 
-3. Zeile 9-29 kontrollieren und bei Bedarf anpassen, siehe Beschreibungen direkt neben den Variablen.
+3. Zeile 9-32 kontrollieren und bei Bedarf anpassen, siehe Beschreibungen direkt neben den Variablen.
 4. Zeile 15-18 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
 5. Skript starten
 6. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Datenpunkt geben, sowie 4 weitere Datenpunkte:
@@ -24,7 +24,7 @@
  
 ![fensteroffentut3.jpg](/admin/fensteroffentut3.jpg) 
 
-Es werden zwei Icon aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen (wird als Adapter installiert) oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 23 und 24 angepasst werden. Sieht dann z.B. so aus:  
+Es werden zwei Icon aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen (wird als Adapter installiert) oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 27 und 28 angepasst werden. Sieht dann z.B. so aus:  
 ![fensteroffentut2.png](/admin/fensteroffentut2.png)  
 
 * RoomsWithOpenWindows: Textfeld mit Räumen in denen Fenster geöffnet sind, inkl. deren Anzahl. Als Trennzeichen wird hier ein HTML Umbruch (<br) verwendet, dies ist im Skript konfigurierbar.
@@ -33,6 +33,7 @@ Es werden zwei Icon aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 1.4.20 Add: Tabellendatumsformatierung ist jetzt in Einstellungen konfigurierbar.
 #### 31.3.20 
 - Add: Benachrichtigung via Mail hinzugefügt.  
  - Add: Option hinzugefügt um auch erstmaliges öffnen sowie schliessen zu melden.

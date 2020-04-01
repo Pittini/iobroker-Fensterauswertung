@@ -1,4 +1,4 @@
-// V1.2.2 vom 30.3.2020
+// V1.2.3 vom 1.4.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -16,8 +16,8 @@ const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer
 const UseMail = false; //Nachricht via Mail versenden
-const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Authorenfunktion, sollte deaktiviert werden.
-const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Authorenfunktion, sollte deaktiviert werden.
+const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Authorenfunktion, sollte deaktiviert werden.
+const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden? Authorenfunktion, sollte deaktiviert werden.
 const AlsoMsgWinOpenClose = false; //Soll auch das erstmalige öffnen, sowie das schliessen gemeldet werden?
 const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
 const WindowIsOpenWhen = ["true", "offen", "gekippt", "open", "tilted", "1", "2"]; // Hier können eigene States für offen angegeben werden, immer !!! in Kleinschreibung
@@ -29,7 +29,7 @@ const WindowCloseImg = "/icons-mfd-svg/fts_window_1w.svg"; // Icon für Fenster 
 const OpenWindowColor = "red"; // Farbe für Fenster offen
 const ClosedWindowColor = "green"; // Farbe für Fenster geschlossen
 const HeadlessTable = false; // Tabelle mit oder ohne Kopf darstellen
-
+const TableDateFormat = "SS:mm:ss TT.MM.JJJJ"; //Zeit- & Datums- formatierung für Tabelle. Übersicht der Kürzel hier: https://github.com/ioBroker/ioBroker.javascript/blob/master/docs/en/javascript.md#formatdate
 
 //Ab hier nix mehr ändern!
 
@@ -133,7 +133,7 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
     //Tabellenüberschrift und Head
     let OverviewTable = "";
     if (!HeadlessTable) {
-        OverviewTable = "<table style='width:100%; border-collapse: collapse; border: 0px solid black;'><caption><div style='height: 40px; padding-top: 10px; padding-bottom: 5px; font-size:1.4em; font-weight: bold;'>Fensterstatus</div></caption>";
+        OverviewTable = "<table style='width:100%; border-collapse: collapse; border: 0px solid black;'><caption><div style='height: 20px; padding-top: 10px; padding-bottom: 5px; font-size:1.4em; font-weight: bold;'>Fensterstatus</div></caption>";
         OverviewTable = OverviewTable + "<thead><tr><th width='100%' style='text-align:center; height: 20px; padding-bottom: 5px;'>" + RoomsWithOpenWindows + "</th></tr></thead><tbody></tbody></table>";
     };
     //Tabelle der Raumdetails
@@ -142,15 +142,14 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
 
 
     for (let x = 0; x < RoomList.length; x++) { //Alle Räume durchgehen
-
         if (RoomOpenWindowCount[x] > 0) { // Räume mit offenen Fenstern
-            RoomStateTimeStamp[x] = formatDate(getState(praefix + RoomList[x] + ".IsOpen").lc, "SS:mm:ss TT.MM.JJJJ");
+            RoomStateTimeStamp[x] = formatDate(getDateObject(getState(praefix + RoomList[x] + ".IsOpen").lc), TableDateFormat);
             OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + OpenWindowColor + ";'><img height=40px src='" + WindowOpenImg + "'></td>"
             OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; text-align:center;background-color:" + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
             OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; background-color:" + OpenWindowColor + ";'>" + RoomList[x] + "<br><div style='font-size:0.8em; font-weight:bold;'>geöffnet: " + RoomStateTimeStamp[x] + "</div></td></tr>"
         }
         else { // Geschlossene Räume
-            RoomStateTimeStamp[x] = formatDate(getState(praefix + RoomList[x] + ".IsOpen").lc, "SS:mm:ss TT.MM.JJJJ");
+            RoomStateTimeStamp[x] = formatDate(getDateObject(getState(praefix + RoomList[x] + ".IsOpen").lc), TableDateFormat);
             OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + ClosedWindowColor + ";'><img height=40px src='" + WindowCloseImg + "'></td>"
             OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; text-align:center; background-color:" + ClosedWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
             OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; background-color:" + ClosedWindowColor + ";'>" + RoomList[x] + "<br><div style='font-size:0.7em; font-weight:normal;'>geschlossen: " + RoomStateTimeStamp[x] + "</div></td></tr>"
