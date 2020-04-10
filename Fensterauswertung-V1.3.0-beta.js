@@ -32,7 +32,6 @@ const ClosedWindowColor = "limegreen"; // Farbe für Fenster geschlossen
 const VentWarnColor = "gold"; // Farbe für Fenster geschlossen
 
 const HeadlessTable = false; // Tabelle mit oder ohne Kopf darstellen
-const TableDateFormat = "SS:mm:ss TT.MM.JJJJ"; //Zeit- & Datums- formatierung für Tabelle. Übersicht der Kürzel hier: https://github.com/ioBroker/ioBroker.javascript/blob/master/docs/en/javascript.md#formatdate
 
 //Ab hier nix mehr ändern!
 const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum

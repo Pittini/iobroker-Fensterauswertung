@@ -17,8 +17,8 @@
 2. Das Skript in ein neues JS Projekt kopieren.
 ![fensteroffentut4.jpg](/admin/fensteroffentut4.jpg) 
 ![fensteroffentut5.jpg](/admin/fensteroffentut5.jpg) 
-3. Zeile 9-32 kontrollieren und bei Bedarf anpassen, siehe Beschreibungen direkt neben den Variablen.
-4. Zeile 15-18 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
+3. Zeile 9-35 kontrollieren und bei Bedarf anpassen, siehe Beschreibungen direkt neben den Variablen.
+4. Zeile 19-24 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
 5. Skript starten
 6. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Channel mit drei Datenpunkten geben:
    1. IsOpen: Ist in diesem Raum ein oder mehrere Fenster geöffnet?
@@ -33,7 +33,7 @@
  
 ![fensteroffentut3.jpg](/admin/fensteroffentut3.jpg) 
 
-Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen (wird als Adapter installiert) oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 28 - 30 angepasst werden. Sieht dann z.B. so aus:  
+Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen (wird als Adapter installiert) oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 27 - 29 angepasst werden. Sieht dann z.B. so aus:  
 
 ![fensteroffentut2b.png](/admin/fensteroffentut2b.png)  
 
