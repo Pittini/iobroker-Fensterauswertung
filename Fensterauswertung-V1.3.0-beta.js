@@ -1,4 +1,4 @@
-// V1.3.0 vom 7.4.2020
+// V1.3.0 vom 10.4.2020
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -6,20 +6,22 @@
 //Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie die Funktion "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
 
 //Grundeinstellungen
-const logging = true; //Erweiterte Logs ausgeben?
+const logging = false; //Erweiterte Logs ausgeben?
 const praefix = "javascript.0.FensterUeberwachung."; //Grundpfad für Script DPs - Muß innerhalb javascript.x sein
-const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten
-const InfoMsgAktiv = true; // Legt fest ob eine Infonachricht nach x Minuten ausgegeben werden soll; Zeitfestlegung erfolgte in Zeile 11
-const RepeatInfoMsg = true; // Legt fest ob Nachrichten einmalig oder zyklisch ausgegeben werden sollen
 const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff in Funktionen gesucht wird. Diese Funktion nur dem Datenpunkt zuweisen, NICHT dem ganzen Channel!
+
+const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten
+const OpenMsgAktiv = true; // Legt fest ob eine Infonachricht für offene Fenster nach x Minuten ausgegeben werden soll; Zeitfestlegung erfolgte in Zeile 11
+const VentMsgAktiv = true; //Soll Lüftungsempfehlung auch als Nachricht ausgegeben werden (sonst nur in der Tabelle)? 
+const AlsoMsgWinOpenClose = false; //Soll auch das erstmalige öffnen, sowie das schliessen gemeldet werden?
+const RepeatInfoMsg = true; // Legt fest ob Nachrichten einmalig oder zyklisch ausgegeben werden sollen
+
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer.
 const UseMail = false; //Nachricht via Mail versenden?
-const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
-const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
-const AlsoMsgWinOpenClose = false; //Soll auch das erstmalige öffnen, sowie das schliessen gemeldet werden?
-const VentWarning = true; //Soll Lüftungsempfehlung auch als Nachricht ausgegeben werden (sonst nur in der Tabelle)? 
+const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
+const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
 
 //Einstellungen zur Tabellenausgabe
 const WindowOpenImg = "/icons-mfd-svg/fts_window_1w_open.svg"; //Icon für Fenster offen
@@ -256,7 +258,7 @@ function VentCheck(x) {
         if (IsInit) { //Bei Skriptstart
             if (CalcTimeDiff("now", RoomStateTimeStamp[x]) >= getDateObject(VentWarnTime[x] * 24 * 60 * 60 * 1000).getTime()) { //Wenn Ventwarnzeit bei Skriptstart schon überschritten, sofortige Meldung
                 VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]);
-                if (VentWarning) {
+                if (VentMsgAktiv) {
                     Meldung(ReplaceChars(RoomList[x]) + " nicht gelüftet " + VentMsg[x]);
                 };
             } else { //Wenn Ventwarnzeit bei Skriptstart noch nicht überschritten, Restzeit berechnen und einmaligen Timeout starten welcher bei Ablauf den regulären Interval startet
@@ -264,7 +266,7 @@ function VentCheck(x) {
                 log("Remaining Vent Warn DiffTime at startup= " + CreateTimeString(CalcTimeDiff(VentWarnTime[x] * 24 * 60 * 60 * 1000, RoomStateTimeCount[x])))
                 VentMsgHandler[x] = setTimeout(function () {
                     VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]);
-                    if (VentWarning) {
+                    if (VentMsgAktiv) {
                         Meldung(ReplaceChars(RoomList[x]) + " nicht gelüftet " + VentMsg[x]);
                         CreateOverviewTable();
                     };
@@ -277,7 +279,7 @@ function VentCheck(x) {
         } else {
             VentMsgHandler[x] = setInterval(function () { // Neuen Timeout setzen, volle Warnzeit 
                 VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]);
-                if (VentWarning) {
+                if (VentMsgAktiv) {
                     Meldung(ReplaceChars(RoomList[x]) + " nicht gelüftet " + VentMsg[x]);
                     CreateOverviewTable();
                 };
@@ -329,7 +331,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
 
         if (RoomOpenWindowCount[TempRoomIndex] == 1) {
             Laufzeit[TempRoomIndex] = 0;
-            if (InfoMsgAktiv == true) {
+            if (OpenMsgAktiv == true) {
                 if (RepeatInfoMsg == true) { // Wenn Intervallmeldung eingestellt Interval starten und Dauer bei Ansage aufaddieren
                     if (logging) log("Setting Interval to Room:" + TempRoom);
 
