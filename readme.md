@@ -25,11 +25,13 @@
    2. RoomOpenWindowCount: Anzahl der in diesem Raum geöffneten Fenster, 0 wenn alle geschlossen.
    3. VentWarnTime: Einstellfeld für die Anzahl Tage nach denen eine Lüftungsempfehlung ausgegeben wird. Lüftungsempfehlung ist bei 0 für diesen Raum deaktiviert.
 
-4. Zusätzlich werden 4 weitere Datenpunkte in der Skript Root angelegt:
+4. Zusätzlich werden 6 weitere Datenpunkte in der Skript Root angelegt:
    1.  AlleFensterZu: Gesamtstatus aller Räume/Fenster
    2.  WindowsOpen: Anzahle der offenen Fenster über alle Räume summiert.
-   3.  RoomsWithOpenWindows: Eine Textliste von Räumen mit geöffneten Fenstern und deren Anzahl. Sinnvoll für Kurzfassungsanzeigen in Vis
-   4. OverviewTable: Dynamisch erzeugte HTML Tabelle mit allen Räumen und den jeweiligen Fensterstati. Verwendung in Vis als Binding: **{javascript.0.FensterUeberwachung.OverviewTable}** in einem HTML Widget, optimale Breite 310px, Hintergrundfarbe nach Wahl.  
+   3.  RoomsWithOpenWindows: Eine Textliste von Räumen mit geöffneten Fenstern und deren Anzahl. Sinnvoll für Kurzfassungsanzeigen in Vis.
+   4.  LastMessage: Die zuletzt ausgegebene Nachricht. Ermöglicht es die Meldungen mit History zu erfassen oder mit Vis auszugeben.
+   5.  MessageLog: Ein kleines Log der ausgegebenen Meldungen mit Zeitstempel. Zeitstempel Format und max. Anzahl der Logeinträge in den Einstellungen konfigurierbar. Default Trennzeichen ist ">br>", somit kann die Liste direkt in einem HTML Widget via Binding (**{javascript.0.FensterUeberwachung.MessageLog}**) in Vis ausgegeben werden.
+   6.  OverviewTable: Dynamisch erzeugte HTML Tabelle mit allen Räumen und den jeweiligen Fensterstati. Verwendung in Vis als Binding: **{javascript.0.FensterUeberwachung.OverviewTable}** in einem HTML Widget, optimale Breite 310px, Hintergrundfarbe, Schriftfarbe und Schriftart nach Wahl.  
  
 ![fensteroffentut3.jpg](/admin/fensteroffentut3.jpg) 
 
@@ -40,6 +42,14 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 11.4.20 (V 1.4.0)
+- Add: Zusätzlicher Datenpunkt "LastMessage" in der Skript Root eingefügt.
+- Add: Zusätzlicher Datenpunkt "MessageLog" in der Skript Root eingefügt.
+- Change: Tabelle, Defaultfarben an MaterialDesign2 Farben angepasst. Schriftgrößenfestlegung von em auf px und Tabellenaufbau geändert um bessere Kompatibilität mit MD2 zu erreichen.
+- Add: Tabelle, Überschrift, Zusammenfassung und Detailbereich können nun in den Einstellungen deaktiviert werden.
+- Add: Bilder können in Einstellungen invertiert werden.
+- Change: Tabelle, Bilder horizontal zentriert.
+- Change: Zur besseren Verständlichkeit einige Einstellungskonstanten umbenannt.
 #### 9.4.20 (V 1.3.0)
 - Add: Unterstriche werden in Meldungen nun als Leerzeichen ausgegeben. Ae, ue, oe, wird in Meldungen nun als ä, ü, ö ausgegeben.
 - Change: offen/geschlossen Zeiten werden nicht mehr als Zeitstempel angezeigt sondern die jeweilige Dauer berechnet und minütlich aktualisiert.

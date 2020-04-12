@@ -1,4 +1,4 @@
-// V1.3.0 vom 10.4.2020
+// V1.4.0 vom 12.4.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -6,14 +6,14 @@
 //Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie die Funktion "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
 
 //Grundeinstellungen
-const logging = false; //Erweiterte Logs ausgeben?
-const praefix = "javascript.0.FensterUeberwachung."; //Grundpfad für Script DPs - Muß innerhalb javascript.x sein
+const logging = true; //Erweiterte Logs ausgeben?
+const praefix = "javascript.0.FensterUeberwachung."; //Grundpfad für Script DPs - Muß innerhalb javascript.x sein.
 const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff in Funktionen gesucht wird. Diese Funktion nur dem Datenpunkt zuweisen, NICHT dem ganzen Channel!
-
+//Nachrichteneinstellungen
 const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten
 const OpenMsgAktiv = true; // Legt fest ob eine Infonachricht für offene Fenster nach x Minuten ausgegeben werden soll; Zeitfestlegung erfolgte in Zeile 11
 const VentMsgAktiv = true; //Soll Lüftungsempfehlung auch als Nachricht ausgegeben werden (sonst nur in der Tabelle)? 
-const AlsoMsgWinOpenClose = false; //Soll auch das erstmalige öffnen, sowie das schliessen gemeldet werden?
+const AlsoMsgWinOpenClose = true; //Soll auch das erstmalige öffnen, sowie das schliessen gemeldet werden?
 const RepeatInfoMsg = true; // Legt fest ob Nachrichten einmalig oder zyklisch ausgegeben werden sollen
 
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
@@ -23,15 +23,23 @@ const UseMail = false; //Nachricht via Mail versenden?
 const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
 const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
 
-//Einstellungen zur Tabellenausgabe
+//Tabelleneinstellungen
 const WindowOpenImg = "/icons-mfd-svg/fts_window_1w_open.svg"; //Icon für Fenster offen
 const WindowCloseImg = "/icons-mfd-svg/fts_window_1w.svg"; // Icon für Fenster geschlossen
-const VentImg = "/icons-mfd-svg/vent_ventilation.svg";
-const OpenWindowColor = "indianred"; // Farbe für Fenster offen
-const ClosedWindowColor = "limegreen"; // Farbe für Fenster geschlossen
-const VentWarnColor = "gold"; // Farbe für Fenster geschlossen
+const VentImg = "/icons-mfd-svg/vent_ventilation.svg"; //Icon für Lüftungsinfo
+const ImgInvert = 1; // Bildfarben invertieren? Erlaubte Werte von 0 bis 1
+const OpenWindowColor = "#f44336"; // Farbe für Fenster offen
+const ClosedWindowColor = "#4caf50"; // Farbe für Fenster geschlossen
+const VentWarnColor = "#ffc107"; // Farbe für Fenster geschlossen
+const ShowCaptionTbl = true; // Überschrift anzeigen?
+const ShowSummaryTbl = true; // Zusammenfassung anzeigen?
+const ShowDetailTbl = true; // Details anzeigen?
 
-const HeadlessTable = false; // Tabelle mit oder ohne Kopf darstellen
+//Logeinstellungen
+const MaxLogEntrys = 20; //Maximale Anzahl der zu speichernden Logeinträge
+const AutoAddTimestamp = true; //Soll den geloggten Nachrichten automatisch ein Zeitsempel zugeordnet werden?
+const LogTimeStampFormat = "TT.MM.JJJJ SS:mm:ss";
+const LogEntrySeparator = "<br>";
 
 //Ab hier nix mehr ändern!
 const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
@@ -55,7 +63,8 @@ let z = 0; //Zähler
 let DpCount = 0; //Zähler
 let IsInit = true // Wird nach initialisierung auf false gesetzt
 const States = []; // Array mit anzulegenden Datenpunkten
-let Funktionen = getEnums('functions');
+let Funktionen = getEnums('functions'); //Array mit Aufzählung der Funktionen
+let MessageLog = "";
 
 for (let x in Funktionen) {        // loop ueber alle Functions
     let Funktion = Funktionen[x].name;
@@ -92,11 +101,15 @@ for (let x in Funktionen) {        // loop ueber alle Functions
 
 //Struktur anlegen in js.0 um Sollwert und Summenergebniss zu speichern
 //Generische Datenpunkte vorbereiten 
-States[DpCount] = { id: praefix + "AlleFensterZu", initial: true, forceCreation: false, common: { read: true, write: true, name: "Fenster zu?", type: "boolean", role: "state", def: true } }; //
+States[DpCount] = { id: praefix + "AlleFensterZu", initial: true, forceCreation: false, common: { read: true, write: true, name: "Sind aktuell alle Fenster geschlossen?", type: "boolean", role: "state", def: true } }; //
 DpCount++;
 States[DpCount] = { id: praefix + "WindowsOpen", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Anzahl der geöffneten Fenster", type: "number", def: 0 } };
 DpCount++;
 States[DpCount] = { id: praefix + "RoomsWithOpenWindows", initial: "Fenster in allen Räumen geschlossen", forceCreation: false, common: { read: true, write: true, name: "In welchen Räumen sind Fenster geöffnet?", type: "string", def: "Fenster in allen Räumen geschlossen" } };
+DpCount++;
+States[DpCount] = { id: praefix + "LastMessage", initial: "", forceCreation: false, common: { read: true, write: true, name: "Die zuletzt ausgegebene Meldung?", type: "string", def: "" } };
+DpCount++;
+States[DpCount] = { id: praefix + "MessageLog", initial: "", forceCreation: false, common: { read: true, write: true, name: "Liste der letzten x ausgebenen Meldungen", type: "string", def: "" } };
 DpCount++;
 States[DpCount] = { id: praefix + "OverviewTable", initial: "", forceCreation: false, common: { read: true, write: true, name: "Übersicht aller Räume und geöffneten Fenster", type: "string", def: "" } };
 
@@ -114,6 +127,7 @@ States.forEach(function (state) {
 
 
 function init() {
+
     for (let x = 0; x < Sensor.length; x++) { //Sensor Dps einlesen
         //setTimeout(function () { // Timeout setzt refresh status wieder zurück
         SensorVal[x] = String(getState(Sensor[x]).val).toLowerCase(); // Wert von Sensor in Schleife einlesen
@@ -134,6 +148,7 @@ function init() {
 }
 
 function main() {
+    MessageLog = getState(praefix + "MessageLog").val;
     init(); //Bei Scriptstart alle Sensoren und Räume einlesen
     CreateTrigger(); //Trigger erstellen
     CreateRoomsWithOpenWindowsList(); //Übersichtsliste mit Räumen mit offenen Fenstern erstellen
@@ -159,49 +174,74 @@ function Meldung(msg) {
     if (UseMail) {
         sendTo("email", msg);
     };
+    setState(praefix + "LastMessage", msg);
+    WriteMessageLog(msg);
 }
 
-function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML Tabelle    
-    //Tabellenüberschrift und Head
+function WriteMessageLog(msg) {
+    if (logging) log("Reaching WriteMessageLog, Message=" + msg);
+    let TempMessageLog = MessageLog.split(LogEntrySeparator); //Logstring in Array wandeln (Entfernt den Separator, deswegen am Funktionsende wieder anhängen)
+    let LogEntrys = TempMessageLog.length; //Arrayeinträge zählen
+
+    if (AutoAddTimestamp) {
+        LogEntrys = TempMessageLog.unshift(formatDate(new Date(), LogTimeStampFormat) + ": " + msg); //neuen Eintrag am Anfang des Array einfügen, Rückgabewert erhöht Zähler
+    } else {
+        LogEntrys = TempMessageLog.unshift(msg); //neuen Eintrag am Anfang des Array einfügen, Rückgabewert erhöht Zähler
+    };
+
+    if (LogEntrys > MaxLogEntrys) { //Wenn durchs anfügen MaxLogEntrys überschritten, einen Eintrag am Ende entfernen
+        TempMessageLog.splice(MaxLogEntrys - LogEntrys); //Vom Ende des Arrays benötigte Anzahl Einträge löschen. Berücksichtig auch Einstellungsänderung auf niedrigere Zahl.
+        LogEntrys = TempMessageLog.length;
+    };
+    log("TempMessageLog=" + TempMessageLog + " Logentrys=" + LogEntrys);
+    MessageLog = TempMessageLog.join(LogEntrySeparator) //Array zu String wandeln und Separator anhängen
+    setState(praefix + "MessageLog", MessageLog); //Logstring schreiben
+}
+
+function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML Tabelle   
     let OverviewTable = "";
-    if (!HeadlessTable) {
-        OverviewTable = "<table style='width:100%; border-collapse: collapse; border: 0px solid black;'><caption><div style='height: 20px; text-align:center; padding-top: 10px; padding-bottom: 5px; font-size:1.4em; font-weight: bold;'>Fensterstatus</div></caption>";
-        OverviewTable = OverviewTable + "<thead><tr><th width='100%' style='text-align:center; height: 20px; padding-bottom: 5px;'>" + RoomsWithOpenWindows + "</th></tr></thead><tbody></tbody></table>";
+
+    //Überschrift
+    if (ShowCaptionTbl) {
+        OverviewTable = "<table style='width:100%; border-collapse: collapse; border: 0px solid black;'><tr><td style='height: 20px; text-align:center; padding-top: 5px; font-size:20px; font-weight: bold;'>Fensterstatus</td></tr></table>"
     };
-    //Tabelle der Raumdetails
-    OverviewTable = OverviewTable + "<div style='height: 100%; overflow-y:auto; overflow-x:hidden;'><table style='width:100%; border-collapse: collapse;'>";
-    OverviewTable = OverviewTable + "<thead><tr><th width='40px' style='text-align:left;'</th><th width='20px' style='text-align:center;'></th><th style='text-align:left;'></th></tr></thead><tbody>";
+    //Zusammenfassung
+    if (ShowSummaryTbl) {
+        OverviewTable = OverviewTable + "<table style='width:100%; border-collapse: collapse; border: 0px solid black;'><tr><td style='height: 20px; text-align:center; padding-top: 5px; padding-bottom: 5px; font-size:16px; font-weight: normal;'>" + RoomsWithOpenWindows + "</td></tr></table>";
+    };
 
+    // Details / Head
+    if (ShowDetailTbl) {
+        OverviewTable = OverviewTable + "<table style='width:100%; border-collapse: collapse;'>";
+        OverviewTable = OverviewTable + "<thead><tr><th width='40px' style='text-align:left;'</th><th width='20px' style='text-align:center;'></th><th style='text-align:left;'></th></tr></thead><tbody>";
 
-    for (let x = 0; x < RoomList.length; x++) { //Alle Räume durchgehen
-        //if (logging) log("x=" + x + " room=" + RoomList[x] + " RoomOpenwindowCount=" + RoomOpenWindowCount[x] + " VentMsg=" + VentMsg[x]);
-        if (RoomOpenWindowCount[x] > 0) { // Räume mit offenen Fenstern
-            //RoomStateTimeStamp[x] = formatDate(getDateObject(getState(praefix + RoomList[x] + ".IsOpen").lc), TableDateFormat);
-            RoomStateTimeCount[x] = CalcTimeDiff("now", RoomStateTimeStamp[x]);
-            OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + OpenWindowColor + ";'><img style='filter: invert(1);' height=40px src='" + WindowOpenImg + "'></td>"
-            OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; text-align:center;background-color:" + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
-            OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; background-color:" + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:0.8em; font-weight:bold;'>geöffnet:<br> " + CreateTimeString(RoomStateTimeCount[x]) + "</div></td></tr>"
-        }
-        else { // Geschlossene Räume
-            RoomStateTimeCount[x] = CalcTimeDiff("now", RoomStateTimeStamp[x]);
-            //log("RSTS=" + RoomStateTimeStamp[x])
-            //log("RSTC=" + RoomStateTimeCount[x])
-            //log("CTS=" + CreateTimeString(RoomStateTimeCount[x]))
-            if (VentMsg[x] == "") {
-                OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + ClosedWindowColor + ";'><img style='filter: invert(1);' height=40px src='" + WindowCloseImg + "'></td>"
-                OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; text-align:center; background-color:" + ClosedWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
-                OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; background-color:" + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:0.7em; font-weight:normal;'>geschlossen:<br> " + CreateTimeString(RoomStateTimeCount[x]) + "</div></td></tr>"
+        //Tabelle der Raumdetails
+        for (let x = 0; x < RoomList.length; x++) { //Alle Räume durchgehen
+            if (RoomOpenWindowCount[x] > 0) { // Räume mit offenen Fenstern
+                //RoomStateTimeStamp[x] = formatDate(getDateObject(getState(praefix + RoomList[x] + ".IsOpen").lc), TableDateFormat);
+                RoomStateTimeCount[x] = CalcTimeDiff("now", RoomStateTimeStamp[x]);
+                OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + OpenWindowColor + ";'><img style='margin: auto; display: block; filter: invert(" + ImgInvert + "); height: 40px;' src='" + WindowOpenImg + "'></td>"
+                OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center;background-color:" + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
+                OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; padding-top: 4px; font-size: 16px; font-weight: bold; background-color:" + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>geöffnet:<br> " + CreateTimeString(RoomStateTimeCount[x]) + "</div></td></tr>"
             }
-            else {
-                OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + VentWarnColor + ";'><img style='filter: invert(1);' height=40px src='" + VentImg + "'></td>"
-                OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; text-align:center; background-color:" + VentWarnColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
+            else { // Geschlossene Räume
+                RoomStateTimeCount[x] = CalcTimeDiff("now", RoomStateTimeStamp[x]);
+                if (VentMsg[x] == "") {
+                    OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + ClosedWindowColor + ";'><img style=' margin: auto; display: block; filter: invert(" + ImgInvert + "); height: 40px;'  src='" + WindowCloseImg + "'></td>"
+                    OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center; background-color:" + ClosedWindowColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
+                    OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; padding-top: 4px; font-size: 16px; font-weight: bold; background-color:" + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>geschlossen:<br> " + CreateTimeString(RoomStateTimeCount[x]) + "</div></td></tr>"
+                }
+                else {
+                    OverviewTable = OverviewTable + "<tr><td style='border: 1px solid black; background-color:" + VentWarnColor + ";'><img style=' margin: auto; display: block; filter: invert(" + ImgInvert + "); height: 40px;'  src='" + VentImg + "'></td>"
+                    OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center; background-color:" + VentWarnColor + ";'>" + RoomOpenWindowCount[x] + "</td>"
 
-                OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:1.1em; font-weight: bold; background-color:" + VentWarnColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:0.8em; font-weight:bold;'> nicht gelüftet:<br>" + CreateTimeString(RoomStateTimeCount[x]) + "</div></td></tr>"
+                    OverviewTable = OverviewTable + "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; padding-top: 4px; font-size: 16px; font-weight: bold; background-color:" + VentWarnColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'> nicht gelüftet:<br>" + CreateTimeString(RoomStateTimeCount[x]) + "</div></td></tr>"
+                };
+
             };
-
         };
+        OverviewTable = OverviewTable + "</tbody></table>";
     };
-    OverviewTable = OverviewTable + "</tbody></table></div>";
     setState(praefix + "OverviewTable", OverviewTable);
 }
 
@@ -250,7 +290,7 @@ function CreateRoomsWithOpenWindowsList() { //Erzeugt Textliste mit Räumen welc
 }
 
 function VentCheck(x) {
-    if (logging) log("Reaching VentCheck x=" + x+" Init="+IsInit);
+    if (logging) log("Reaching VentCheck x=" + x + " Init=" + IsInit);
 
     if (RoomOpenWindowCount[x] == 0 && VentWarnTime[x] != 0) { //VentTimeout starten wenn Raum geschlossen und Warnzeit nicht 0 (= deaktiviert) 
         if (logging) log("Starting VentInterval for Room " + RoomList[x] + " Time set to: " + VentWarnTime[x] + " days");
@@ -325,13 +365,13 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
 
             if (logging) log(TempRoom + " Fenster geöffnet");
             if (AlsoMsgWinOpenClose) Meldung(ReplaceChars(TempRoom) + " Fenster geöffnet!");
-            if (UseEventLog == true) WriteEventLog(ReplaceChars(TempRoom) + " Fenster geöffnet!");
+            if (UseEventLog) WriteEventLog(ReplaceChars(TempRoom) + " Fenster geöffnet!");
         };
 
         if (RoomOpenWindowCount[TempRoomIndex] == 1) {
             Laufzeit[TempRoomIndex] = 0;
-            if (OpenMsgAktiv == true) {
-                if (RepeatInfoMsg == true) { // Wenn Intervallmeldung eingestellt Interval starten und Dauer bei Ansage aufaddieren
+            if (OpenMsgAktiv) {
+                if (RepeatInfoMsg) { // Wenn Intervallmeldung eingestellt Interval starten und Dauer bei Ansage aufaddieren
                     if (logging) log("Setting Interval to Room:" + TempRoom);
 
                     OpenWindowMsgHandler[TempRoomIndex] = setInterval(function () {
@@ -359,7 +399,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
 
             log(TempRoom + " Fenster geschlossen.");
             if (AlsoMsgWinOpenClose) Meldung(ReplaceChars(TempRoom) + " Fenster geschlossen!");
-            if (UseEventLog == true) WriteEventLog(ReplaceChars(TempRoom) + " Fenster geschlossen!");
+            if (UseEventLog) WriteEventLog(ReplaceChars(TempRoom) + " Fenster geschlossen!");
         };
 
         setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
@@ -367,7 +407,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
         if (RoomOpenWindowCount[TempRoomIndex] == 0) {
             setState(praefix + TempRoom + ".IsOpen", false);
 
-            if (RepeatInfoMsg == true) {
+            if (RepeatInfoMsg) {
                 if (logging) log("reaching clearInterval - [x] = " + [x] + " TempRoomIndex= " + TempRoomIndex);
                 if (typeof (OpenWindowMsgHandler[TempRoomIndex]) == "object") { //Wenn ein Interval gesetzt ist, löschen
                     log("Clearing Interval for " + x)
