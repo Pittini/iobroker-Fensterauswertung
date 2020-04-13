@@ -1,4 +1,4 @@
-// V1.4.0 vom 12.4.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+// V1.4.2 vom 13.4.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -11,7 +11,7 @@ const praefix = "javascript.0.FensterUeberwachung."; //Grundpfad für Script DPs
 const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff in Funktionen gesucht wird. Diese Funktion nur dem Datenpunkt zuweisen, NICHT dem ganzen Channel!
 //Nachrichteneinstellungen
 const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten
-const OpenMsgAktiv = true; // Legt fest ob eine Infonachricht für offene Fenster nach x Minuten ausgegeben werden soll; Zeitfestlegung erfolgte in Zeile 11
+const OpenMsgAktiv = false; // Legt fest ob eine Infonachricht für offene Fenster nach x Minuten ausgegeben werden soll; Zeitfestlegung erfolgte in Zeile 11
 const VentMsgAktiv = true; //Soll Lüftungsempfehlung auch als Nachricht ausgegeben werden (sonst nur in der Tabelle)? 
 const AlsoMsgWinOpenClose = true; //Soll auch das erstmalige öffnen, sowie das schliessen gemeldet werden?
 const RepeatInfoMsg = true; // Legt fest ob Nachrichten einmalig oder zyklisch ausgegeben werden sollen
@@ -20,7 +20,7 @@ const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer.
 const UseMail = false; //Nachricht via Mail versenden?
-const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
+const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
 const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
 
 //Tabelleneinstellungen
@@ -31,12 +31,12 @@ const ImgInvert = 1; // Bildfarben invertieren? Erlaubte Werte von 0 bis 1
 const OpenWindowColor = "#f44336"; // Farbe für Fenster offen
 const ClosedWindowColor = "#4caf50"; // Farbe für Fenster geschlossen
 const VentWarnColor = "#ffc107"; // Farbe für Fenster geschlossen
-const ShowCaptionTbl = true; // Überschrift anzeigen?
+const ShowCaptionTbl = false; // Überschrift anzeigen?
 const ShowSummaryTbl = true; // Zusammenfassung anzeigen?
-const ShowDetailTbl = true; // Details anzeigen?
+const ShowDetailTbl = false; // Details anzeigen?
 
 //Logeinstellungen
-const MaxLogEntrys = 20; //Maximale Anzahl der zu speichernden Logeinträge
+const MaxLogEntrys = 15; //Maximale Anzahl der zu speichernden Logeinträge
 const AutoAddTimestamp = true; //Soll den geloggten Nachrichten automatisch ein Zeitsempel zugeordnet werden?
 const LogTimeStampFormat = "TT.MM.JJJJ SS:mm:ss";
 const LogEntrySeparator = "<br>";
@@ -48,6 +48,7 @@ const WindowIsClosedWhen = ["false", "closed", "0"]; // Hier können eigene Stat
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
 const RoomOpenWindowCount = []; // Array für offene Fenster pro Raum
 let RoomsWithOpenWindows = "";
+let RoomsWithVentWarnings = [];
 const OpenWindowMsgHandler = []; // Objektarray für timeouts pro Raum
 const VentMsgHandler = [];
 const VentMsg = [];
@@ -65,6 +66,7 @@ let IsInit = true // Wird nach initialisierung auf false gesetzt
 const States = []; // Array mit anzulegenden Datenpunkten
 let Funktionen = getEnums('functions'); //Array mit Aufzählung der Funktionen
 let MessageLog = "";
+let MuteMode = 0;
 
 for (let x in Funktionen) {        // loop ueber alle Functions
     let Funktion = Funktionen[x].name;
@@ -101,17 +103,21 @@ for (let x in Funktionen) {        // loop ueber alle Functions
 
 //Struktur anlegen in js.0 um Sollwert und Summenergebniss zu speichern
 //Generische Datenpunkte vorbereiten 
-States[DpCount] = { id: praefix + "AlleFensterZu", initial: true, forceCreation: false, common: { read: true, write: true, name: "Sind aktuell alle Fenster geschlossen?", type: "boolean", role: "state", def: true } }; //
+States[DpCount] = { id: praefix + "AlleFensterZu", initial: true, forceCreation: false, common: { read: true, write: false, name: "Sind aktuell alle Fenster geschlossen?", type: "boolean", role: "state", def: true } }; //
 DpCount++;
-States[DpCount] = { id: praefix + "WindowsOpen", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Anzahl der geöffneten Fenster", type: "number", def: 0 } };
+States[DpCount] = { id: praefix + "WindowsOpen", initial: 0, forceCreation: false, common: { read: true, write: false, name: "Anzahl der geöffneten Fenster", type: "number", def: 0 } };
 DpCount++;
-States[DpCount] = { id: praefix + "RoomsWithOpenWindows", initial: "Fenster in allen Räumen geschlossen", forceCreation: false, common: { read: true, write: true, name: "In welchen Räumen sind Fenster geöffnet?", type: "string", def: "Fenster in allen Räumen geschlossen" } };
+States[DpCount] = { id: praefix + "RoomsWithOpenWindows", initial: "", forceCreation: false, common: { read: true, write: false, name: "In welchen Räumen sind Fenster geöffnet?", type: "string", def: "" } };
 DpCount++;
-States[DpCount] = { id: praefix + "LastMessage", initial: "", forceCreation: false, common: { read: true, write: true, name: "Die zuletzt ausgegebene Meldung?", type: "string", def: "" } };
+States[DpCount] = { id: praefix + "RoomsWithVentWarnings", initial: "", forceCreation: false, common: { read: true, write: false, name: "In welchen Räumen ist eine Lüftungswarnung aktiv?", type: "string", def: "" } };
 DpCount++;
-States[DpCount] = { id: praefix + "MessageLog", initial: "", forceCreation: false, common: { read: true, write: true, name: "Liste der letzten x ausgebenen Meldungen", type: "string", def: "" } };
+States[DpCount] = { id: praefix + "LastMessage", initial: "", forceCreation: false, common: { read: true, write: false, name: "Die zuletzt ausgegebene Meldung?", type: "string", def: "" } };
 DpCount++;
-States[DpCount] = { id: praefix + "OverviewTable", initial: "", forceCreation: false, common: { read: true, write: true, name: "Übersicht aller Räume und geöffneten Fenster", type: "string", def: "" } };
+States[DpCount] = { id: praefix + "MessageLog", initial: "", forceCreation: false, common: { read: true, write: false, name: "Liste der letzten x ausgebenen Meldungen", type: "string", def: "" } };
+DpCount++;
+States[DpCount] = { id: praefix + "OverviewTable", initial: "", forceCreation: false, common: { read: true, write: false, name: "Übersicht aller Räume und geöffneten Fenster", type: "string", def: "" } };
+DpCount++;
+States[DpCount] = { id: praefix + "MuteMode", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Stummschalten?", type: "number", min: 0, max: 2, def: 0 } };
 
 //Alle States anlegen, Main aufrufen wenn fertig
 let numStates = States.length;
@@ -127,6 +133,8 @@ States.forEach(function (state) {
 
 
 function init() {
+    MessageLog = getState(praefix + "MessageLog").val;
+    MuteMode = getState(praefix + "MuteMode").val;
 
     for (let x = 0; x < Sensor.length; x++) { //Sensor Dps einlesen
         //setTimeout(function () { // Timeout setzt refresh status wieder zurück
@@ -139,6 +147,7 @@ function init() {
 
     for (let x = 0; x < RoomList.length; x++) { //Raum Dps einlesen
         //setTimeout(function () { // Timeout setzt refresh status wieder zurück
+        RoomsWithVentWarnings[x] = "";
         VentWarnTime[x] = getState(praefix + RoomList[x] + ".VentWarnTime").val; //Lüftungswarnzeiten einlesen
         VentMsg[x] = ""; // Lüftungsnachricht mit Leerstring initialisieren
         VentCheck(x)
@@ -148,10 +157,10 @@ function init() {
 }
 
 function main() {
-    MessageLog = getState(praefix + "MessageLog").val;
     init(); //Bei Scriptstart alle Sensoren und Räume einlesen
     CreateTrigger(); //Trigger erstellen
     CreateRoomsWithOpenWindowsList(); //Übersichtsliste mit Räumen mit offenen Fenstern erstellen
+    CreateRoomsWithVentWarnings();
     CreateOverviewTable(); //HTML Tabelle erstellen
     Ticker(); //Minutenticker für Tabellenrefresh starten
 
@@ -159,21 +168,29 @@ function main() {
 
 function Meldung(msg) {
     if (logging) log("Reaching Meldung, msg= " + msg);
-    if (UseEventLog) {
-        WriteEventLog(msg);
+
+    if (MuteMode != 1 && MuteMode != 2) {
+        if (UseSay) Say(msg);
+
+        if (UseAlexa) {
+            if (AlexaId != "") setState("alexa2.0.Echo-Devices." + AlexaId + ".Commands.announcement"/*announcement*/, msg);
+        };
     };
-    if (UseSay) Say(msg);
-    if (UseTelegram) {
-        sendTo("telegram.0", "send", {
-            text: msg
-        });
-    };
-    if (UseAlexa) {
-        if (AlexaId != "") setState("alexa2.0.Echo-Devices." + AlexaId + ".Commands.announcement"/*announcement*/, msg);
-    };
-    if (UseMail) {
-        sendTo("email", msg);
-    };
+    if (MuteMode != 2) {
+        if (UseEventLog) {
+            WriteEventLog(msg);
+        };
+
+        if (UseTelegram) {
+            sendTo("telegram.0", "send", {
+                text: msg
+            });
+        };
+
+        if (UseMail) {
+            sendTo("email", msg);
+        };
+    }
     setState(praefix + "LastMessage", msg);
     WriteMessageLog(msg);
 }
@@ -181,12 +198,12 @@ function Meldung(msg) {
 function WriteMessageLog(msg) {
     if (logging) log("Reaching WriteMessageLog, Message=" + msg);
     let TempMessageLog = MessageLog.split(LogEntrySeparator); //Logstring in Array wandeln (Entfernt den Separator, deswegen am Funktionsende wieder anhängen)
-    let LogEntrys = TempMessageLog.length; //Arrayeinträge zählen
+    let LogEntrys = 0; //Arrayeinträge zählen
 
     if (AutoAddTimestamp) {
-        LogEntrys = TempMessageLog.unshift(formatDate(new Date(), LogTimeStampFormat) + ": " + msg); //neuen Eintrag am Anfang des Array einfügen, Rückgabewert erhöht Zähler
+        LogEntrys = TempMessageLog.unshift(formatDate(new Date(), LogTimeStampFormat) + ": " + msg); //neuen Eintrag am Anfang des Array einfügen, Rückgabewert setzt Zähler
     } else {
-        LogEntrys = TempMessageLog.unshift(msg); //neuen Eintrag am Anfang des Array einfügen, Rückgabewert erhöht Zähler
+        LogEntrys = TempMessageLog.unshift(msg); //neuen Eintrag am Anfang des Array einfügen, Rückgabewert setzt Zähler
     };
 
     if (LogEntrys > MaxLogEntrys) { //Wenn durchs anfügen MaxLogEntrys überschritten, einen Eintrag am Ende entfernen
@@ -268,7 +285,7 @@ function ReplaceChars(OrigString) {
 }
 
 function CreateRoomsWithOpenWindowsList() { //Erzeugt Textliste mit Räumen welche geöffnete Fenster haben
-    log("Reaching CreateRoomsWithOpenWindowsList");
+    if (logging) log("Reaching CreateRoomsWithOpenWindowsList");
     RoomsWithOpenWindows = ""; //Liste Initialisieren
     for (let x = 0; x < RoomList.length; x++) { //Alle Räume durchgehen
         if (RoomOpenWindowCount[x] > 0) { // Nur Räume mit offenen Fenstern berücksichtigen
@@ -289,6 +306,20 @@ function CreateRoomsWithOpenWindowsList() { //Erzeugt Textliste mit Räumen welc
     if (logging) log("RoomsWithOpenWindows: " + RoomsWithOpenWindows);
 }
 
+function CreateRoomsWithVentWarnings(x, Warning) {
+    let Tempstring = "";
+    if (logging) log("Reaching CreateRoomsWithVentWarnings");
+    RoomsWithVentWarnings[x] = Warning;
+
+    for (let y = 0; y < RoomsWithVentWarnings.length; y++) {
+        if (RoomsWithVentWarnings[y] != "")
+            Tempstring = Tempstring + RoomList[y] + " nicht gelüftet seit: " + RoomsWithVentWarnings[y] + OpenWindowListSeparator;
+    };
+    Tempstring = Tempstring.substr(0, Tempstring.length - OpenWindowListSeparator.length);
+    //Tempstring = ReplaceChars(Tempstring);
+    setState(praefix + "RoomsWithVentWarnings", Tempstring);
+}
+
 function VentCheck(x) {
     if (logging) log("Reaching VentCheck x=" + x + " Init=" + IsInit);
 
@@ -297,6 +328,7 @@ function VentCheck(x) {
         if (IsInit) { //Bei Skriptstart
             if (CalcTimeDiff("now", RoomStateTimeStamp[x]) >= getDateObject(VentWarnTime[x] * 24 * 60 * 60 * 1000).getTime()) { //Wenn Ventwarnzeit bei Skriptstart schon überschritten, sofortige Meldung
                 VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]);
+                CreateRoomsWithVentWarnings(x, VentMsg[x]);
                 if (VentMsgAktiv) {
                     Meldung(ReplaceChars(RoomList[x]) + " nicht gelüftet " + VentMsg[x]);
                 };
@@ -305,6 +337,7 @@ function VentCheck(x) {
                 log("Remaining Vent Warn DiffTime at startup= " + CreateTimeString(CalcTimeDiff(VentWarnTime[x] * 24 * 60 * 60 * 1000, RoomStateTimeCount[x])))
                 VentMsgHandler[x] = setTimeout(function () {
                     VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]);
+                    CreateRoomsWithVentWarnings(x, VentMsg[x]);
                     if (VentMsgAktiv) {
                         Meldung(ReplaceChars(RoomList[x]) + " nicht gelüftet " + VentMsg[x]);
                         CreateOverviewTable();
@@ -318,6 +351,7 @@ function VentCheck(x) {
         } else {
             VentMsgHandler[x] = setInterval(function () { // Neuen Timeout setzen, volle Warnzeit 
                 VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]);
+                CreateRoomsWithVentWarnings(x, VentMsg[x])
                 if (VentMsgAktiv) {
                     Meldung(ReplaceChars(RoomList[x]) + " nicht gelüftet " + VentMsg[x]);
                     CreateOverviewTable();
@@ -328,6 +362,7 @@ function VentCheck(x) {
         log("VentMsg=" + VentMsg[x]);
     }
     else {
+        CreateRoomsWithVentWarnings(x, "");
         if (typeof (VentMsgHandler[x]) == "object") { //Wenn ein Interval gesetzt ist, löschen
             log("Clearing Interval for " + x)
             clearInterval(VentMsgHandler[x]); //Beim erstmaligen Fensteröffnen eines Raumes Lüftungstimeout resetten
@@ -557,7 +592,10 @@ function CreateTrigger() {
         });
     };
 
-
+    //Trigger für MuteMode erzeugen
+    on(praefix + "MuteMode", function (dp) { //Trigger in Schleife erstellen
+        MuteMode = dp.state.val;
+    });
 
     onStop(function () { //Bei Scriptende alle Timer löschen
         for (let x = 1; x < Sensor.length; x++) {
