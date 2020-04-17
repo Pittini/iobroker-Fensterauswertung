@@ -1,4 +1,4 @@
-// V1.4.2 vom 13.4.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+// V1.4.3 vom 17.4.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -33,13 +33,13 @@ const ClosedWindowColor = "#4caf50"; // Farbe für Fenster geschlossen
 const VentWarnColor = "#ffc107"; // Farbe für Fenster geschlossen
 const ShowCaptionTbl = false; // Überschrift anzeigen?
 const ShowSummaryTbl = true; // Zusammenfassung anzeigen?
-const ShowDetailTbl = false; // Details anzeigen?
+const ShowDetailTbl = true; // Details anzeigen?
 
 //Logeinstellungen
 const MaxLogEntrys = 15; //Maximale Anzahl der zu speichernden Logeinträge
 const AutoAddTimestamp = true; //Soll den geloggten Nachrichten automatisch ein Zeitsempel zugeordnet werden?
 const LogTimeStampFormat = "TT.MM.JJJJ SS:mm:ss";
-const LogEntrySeparator = "<br>";
+const LogEntrySeparator ="<br>";
 
 //Ab hier nix mehr ändern!
 const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
@@ -65,8 +65,8 @@ let DpCount = 0; //Zähler
 let IsInit = true // Wird nach initialisierung auf false gesetzt
 const States = []; // Array mit anzulegenden Datenpunkten
 let Funktionen = getEnums('functions'); //Array mit Aufzählung der Funktionen
-let MessageLog = "";
-let MuteMode = 0;
+let MessageLog = ""; 
+let MuteMode = 0; //Stummschaltungsmodus für Nachrichten. 0=Alles erlaubt, 1=Sprachnachrichten deaktivieren, 2=Alles deaktivieren
 
 for (let x in Funktionen) {        // loop ueber alle Functions
     let Funktion = Funktionen[x].name;
@@ -272,10 +272,10 @@ function CalcTimeDiff(time1, time2) {
 
 function Ticker() {
     setInterval(function () { // Wenn 
+    if (logging) log("Rfreshing OverviewTable")
         CreateOverviewTable();
     }, 60000);
 }
-
 function ReplaceChars(OrigString) {
     let NewString = OrigString.replace("_", " ");
     NewString = NewString.replace("ae", "ä");
@@ -316,12 +316,11 @@ function CreateRoomsWithVentWarnings(x, Warning) {
             Tempstring = Tempstring + RoomList[y] + " nicht gelüftet seit: " + RoomsWithVentWarnings[y] + OpenWindowListSeparator;
     };
     Tempstring = Tempstring.substr(0, Tempstring.length - OpenWindowListSeparator.length);
-    //Tempstring = ReplaceChars(Tempstring);
     setState(praefix + "RoomsWithVentWarnings", Tempstring);
 }
 
 function VentCheck(x) {
-    if (logging) log("Reaching VentCheck x=" + x + " Init=" + IsInit);
+    if (logging) log("Reaching VentCheck x=" + x + " Init=" + IsInit +" VentwarnTime[x]="+VentWarnTime[x]+" RoomStateTimeStamp[x]="+RoomStateTimeStamp[x]);
 
     if (RoomOpenWindowCount[x] == 0 && VentWarnTime[x] != 0) { //VentTimeout starten wenn Raum geschlossen und Warnzeit nicht 0 (= deaktiviert) 
         if (logging) log("Starting VentInterval for Room " + RoomList[x] + " Time set to: " + VentWarnTime[x] + " days");
@@ -350,7 +349,7 @@ function VentCheck(x) {
 
         } else {
             VentMsgHandler[x] = setInterval(function () { // Neuen Timeout setzen, volle Warnzeit 
-                VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]);
+                VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]); //Watch!!
                 CreateRoomsWithVentWarnings(x, VentMsg[x])
                 if (VentMsgAktiv) {
                     Meldung(ReplaceChars(RoomList[x]) + " nicht gelüftet " + VentMsg[x]);
@@ -366,6 +365,8 @@ function VentCheck(x) {
         if (typeof (VentMsgHandler[x]) == "object") { //Wenn ein Interval gesetzt ist, löschen
             log("Clearing Interval for " + x)
             clearInterval(VentMsgHandler[x]); //Beim erstmaligen Fensteröffnen eines Raumes Lüftungstimeout resetten
+            clearTimeout(VentMsgHandler[x]); //Beim erstmaligen Fensteröffnen eines Raumes Lüftungstimeout resetten
+            
         };
     };
 }
@@ -445,12 +446,12 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
             if (RepeatInfoMsg) {
                 if (logging) log("reaching clearInterval - [x] = " + [x] + " TempRoomIndex= " + TempRoomIndex);
                 if (typeof (OpenWindowMsgHandler[TempRoomIndex]) == "object") { //Wenn ein Interval gesetzt ist, löschen
-                    log("Clearing Interval for " + x)
+                    log("Clearing Interval at checkWindow for x=" + x)
                     clearInterval(OpenWindowMsgHandler[TempRoomIndex]); //Beim erstmaligen Fensteröffnen eines Raumes Lüftungstimeout resetten
                 };
             }
             else {
-                if (logging) log("reaching clearTimeout");
+                if (logging) log("reaching clearTimeout at checkWindow for x="+x);
                 clearTimeout(OpenWindowMsgHandler[TempRoomIndex]);
             };
         };
@@ -473,7 +474,7 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert.
         RoomStateTimeStamp[TempRoomIndex] = getState(praefix + RoomList[TempRoomIndex] + ".IsOpen").lc;
     } else {
         //if (RoomOpenWindowCount[TempRoomIndex] == 1) RoomStateTimeStamp[TempRoomIndex] = new Date().getTime(); //Bei Erstöffnung Zeitstempel für Raum setzen
-        log("RoomStateTimeStamp= " + RoomStateTimeStamp[TempRoomIndex]);
+       if (logging) log("RoomStateTimeStamp at checkWindow= " + RoomStateTimeStamp[TempRoomIndex]+ " ms ="+ formatDate(RoomStateTimeStamp[TempRoomIndex],LogTimeStampFormat));
     };
 
     RoomStateTimeCount[TempRoomIndex] = CalcTimeDiff("now", RoomStateTimeStamp[TempRoomIndex]);
@@ -600,9 +601,10 @@ function CreateTrigger() {
     onStop(function () { //Bei Scriptende alle Timer löschen
         for (let x = 1; x < Sensor.length; x++) {
 
-            if (typeof (VentMsgHandler[x]) == "object") { //Wenn ein Interval gesetzt ist, löschen
+            if (typeof (VentMsgHandler[x]) == "object") { //Wenn ein Interval oder Timeout gesetzt ist, löschen
                 log("Clearing Interval for " + x)
                 clearInterval(VentMsgHandler[x]);
+                clearTimeout(VentMsgHandler[x]);
             };
 
             if (RepeatInfoMsg == true) {
@@ -610,16 +612,13 @@ function CreateTrigger() {
                     log("Clearing Interval for " + x)
                     clearInterval(OpenWindowMsgHandler[x]); //
                 };
-
             }
             else {
-                if (typeof (OpenWindowMsgHandler[x]) == "object") { //Wenn ein Interval gesetzt ist, löschen
+                if (typeof (OpenWindowMsgHandler[x]) == "object") { //Wenn ein Timeout gesetzt ist, löschen
                     log("Clearing Timeout for " + x)
                     clearTimeout(OpenWindowMsgHandler[x]);
                 };
-
             };
-
         };
     }, 100);
 }

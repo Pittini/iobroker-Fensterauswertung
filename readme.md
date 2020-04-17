@@ -47,6 +47,9 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 17.4.20 (V 1.4.3)
+- Add: Zusätzliche Logpunkte.
+- Fix: Problem mit inkorrekten Lüftungswarnungen nach Initphase.
 #### 13.4.20 (V 1.4.2)
 - Add: Zusätzlicher Datenpunkt "MuteMode" in der Skript Root eingefügt.
 - Add: Zusätzlicher Datenpunkt "RoomsWithVentWarning" in der Skript Root eingefügt.
