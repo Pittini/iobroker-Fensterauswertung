@@ -1,3 +1,4 @@
+## (Version 1.5.0)
 ## Script um offene Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle. Flexibel konfigurierbar.
 
 ### Features
