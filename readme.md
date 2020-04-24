@@ -56,7 +56,7 @@
 
 Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen (wird als Adapter installiert) oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 27 - 29 angepasst werden. Sieht dann z.B. so aus:  
 
-![fensteroffentut2b.png](/admin/fensteroffentut2b.png)  
+![fensteroffentut2c.png](/admin/fensteroffentut2c.png)  
 
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
