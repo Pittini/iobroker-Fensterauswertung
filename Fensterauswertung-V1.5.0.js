@@ -231,8 +231,15 @@ function Meldung(msg) {
 
 function WriteMessageLog(msg) {
     if (logging) log("Reaching WriteMessageLog, Message=" + msg);
-    let TempMessageLog = MessageLog.split(LogEntrySeparator); //Logstring in Array wandeln (Entfernt den Separator, deswegen am Funktionsende wieder anhängen)
     let LogEntrys = 0; //Arrayeinträge zählen
+
+    let TempMessageLog = [];
+    if (MessageLog == null) { //Fehler "Cannot read property 'split' of null" abfangen
+        if (logging) log("MessageLog=null skiping split");
+    }
+    else {
+        TempMessageLog = MessageLog.split(LogEntrySeparator); //Logstring in Array wandeln (Entfernt den Separator, deswegen am Funktionsende wieder anhängen)
+    };
 
     if (AutoAddTimestamp) {
         LogEntrys = TempMessageLog.unshift(formatDate(new Date(), LogTimeStampFormat) + ": " + msg); //neuen Eintrag am Anfang des Array einfügen, Rückgabewert setzt Zähler
@@ -317,7 +324,7 @@ function CalcTimeDiff(time1, time2) {
     if (time1 == "now") {
         time1 = new Date().getTime();
     };
-    if (logging) log( "Reaching CalcTimeDiff, time1="+time1+", time2="+time2+", result= " + CreateTimeString(time1 - time2));
+    if (logging) log("Reaching CalcTimeDiff, time1=" + time1 + ", time2=" + time2 + ", result= " + CreateTimeString(time1 - time2));
     return (time1 - time2);
 }
 
