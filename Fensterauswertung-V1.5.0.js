@@ -488,11 +488,20 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert. Eig
         setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
 
         if (!IsInit) {
-            if (RoomOpenWindowCount[TempRoomIndex] == 1) RoomStateTimeStamp[TempRoomIndex] = new Date().getTime(); //Bei Erstöffnung Zeitstempel für Raum setzen
-
-            if (logging) log(TempRoom + " Fenster geöffnet");
-            if (SendOpenCloseMsg[TempRoomIndex]) Meldung(ReplaceChars(TempRoom) + " Fenster geöffnet!");
-            if (UseEventLog) WriteEventLog(ReplaceChars(TempRoom) + " Fenster geöffnet!");
+            if (RoomOpenWindowCount[TempRoomIndex] == 1) {
+                RoomStateTimeStamp[TempRoomIndex] = new Date().getTime(); //Bei Erstöffnung Zeitstempel für Raum setzen
+            }
+            if (SensorVal[x] == "open") {
+                if (logging) log(TempRoom + " Fenster geöffnet");
+                if (SendOpenCloseMsg[TempRoomIndex]) Meldung(ReplaceChars(TempRoom) + " Fenster geöffnet!");
+                if (UseEventLog) WriteEventLog(ReplaceChars(TempRoom) + " Fenster geöffnet!");
+            }
+            else if (SensorVal[x] == "tilted") {
+                if (logging) log(TempRoom + " Fenster gekippt");
+                if (SendOpenCloseMsg[TempRoomIndex]) Meldung(ReplaceChars(TempRoom) + " Fenster gekippt!");
+                if (UseEventLog) WriteEventLog(ReplaceChars(TempRoom) + " Fenster gekippt!");
+            };
+            
         };
 
         if (RoomOpenWindowCount[TempRoomIndex] == 1) {
