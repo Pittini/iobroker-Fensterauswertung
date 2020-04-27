@@ -715,8 +715,8 @@ function CreateTrigger() {
                         //if (logging) log("InTimeout - Trigger= " + x + " Wert= " + dp.state.val + " Alter Wert= " + dp.oldState.val);
                         if (getState(Sensor[x]).val != IgnoreValue[x]) { //Nachdem Timeout abgelaufen, vergleichen ob gemerkter Wert mit aktuellem Wert übereinstimmt, wenn nicht, Aktionen starten
                             if (logging) log("Ignore Timeout for " + x + " exceeded, Value change happend, starting Functions");
-                            SensorVal[x] = SimplyfyWindowStates(dp.state.val, x); // Alles in String und Kleinschreibweise wandeln
-                            SensorOldVal[x] = SimplyfyWindowStates(dp.oldState.val, x); // Alles in String und Kleinschreibweise wandeln
+                            SensorVal[x] = SimplyfyWindowStates(getState(Sensor[x]).val, x); // Alles in String und Kleinschreibweise wandeln
+                            SensorOldVal[x] = IgnoreValue[x]; // Alles in String und Kleinschreibweise wandeln
                             CheckWindow(x);
                             CreateRoomsWithOpenWindowsList();
                             CreateRoomsWithTiltedWindowsList();
