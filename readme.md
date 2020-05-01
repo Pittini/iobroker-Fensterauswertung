@@ -1,4 +1,4 @@
-## (Version 1.5.0)
+## (Version 1.5.2)
 ## Script um offene Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle. Flexibel konfigurierbar.
 
 ### Features
@@ -61,6 +61,9 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 27.4.20 (V1.5.2)
+- Add/Fix: Da sich HM Geräte nicht einig sind welcher Wert welchen Zustand bedeutet (bei einfachen Fensterkontakten 0=zu / 1=offen, bei Drehgriffkontakten 0=zu / 1=gekippt / 2=offen) wird jetzt zusätzlich der Text der Werteliste, wenn vorhanden, verwendet.
+- Fix: Timingproblem behoben welches bei Verwendung von HM Drehgriffkontakten und Statusänderung von gekippt nach zu auftrat.
 #### 24.4.20 (V 1.5.0)
 - Add: Nachrichtenausgabe kann nun in den Raumdatenpunkten pro Raum konfiguriert werden. Hierzu die Datenpunkte: SendOpenCloseMsg, SendVentMsg und SendWarnMsg angelegt.
 - Add: In den Skripteinstellungen, MaxMsg hinzugefügt. Hier kann festgelegt werden wieviele Nachrichten Ihr maximal pro Raum erhalten möchtet. Wegfall der Option RepeatInfoMsg, da dies durch MaxMsg=1 konfiguriert werden kann.
