@@ -61,6 +61,10 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 03.05.20 (V1.5.3)
+- Fix: Zeitversatz bei Lüftungsmeldungen behoben welcher zu 23 Stunden, 59 Minuten Meldungen (statt 1 Tag) führte.
+- Fix: Mail Messaging auf Html umgestellt damit Umbrüche korrekt angezeigt werden.
+- Change: Einige default Werte geändert, kleine interne Codeänderungen.
 #### 27.4.20 (V1.5.2)
 - Add/Fix: Da sich HM Geräte nicht einig sind welcher Wert welchen Zustand bedeutet (bei einfachen Fensterkontakten 0=zu / 1=offen, bei Drehgriffkontakten 0=zu / 1=gekippt / 2=offen) wird jetzt zusätzlich der Text der Werteliste, wenn vorhanden, verwendet.
 - Fix: Timingproblem behoben welches bei Verwendung von HM Drehgriffkontakten und Statusänderung von gekippt nach zu auftrat.

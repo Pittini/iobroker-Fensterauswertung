@@ -1,4 +1,4 @@
-// V1.5.2 vom 27.4.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+// V1.5.3 vom 3.5.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -12,8 +12,8 @@ const WelcheFunktionVerwenden = "Verschluss"; // Legt fest nach welchem Begriff 
 const IgnoreTime = 10000; // 10000 ms = 10 Sekunden - Zeit in ms für die kurzzeitiges öffnen/schliessen ignoriert wird
 
 //Nachrichteneinstellungen
-const ZeitBisNachricht = 300000 // 300000 ms = 5 Minuten - Zyklus- bzw. Ablaufzeit für Fensteroffenwarnung/en
-const MaxMessages = 5; //Maximale Anzahl der Nachrichten pro Raum 
+const ZeitBisNachricht = 900000 // 300000 ms = 5 Minuten - Zyklus- bzw. Ablaufzeit für Fensteroffenwarnung/en
+const MaxMessages = 3; //Maximale Anzahl der Nachrichten pro Raum 
 
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
@@ -220,9 +220,11 @@ function Meldung(msg) {
             });
         };
 
-        if (UseMail) {
-            sendTo("email", msg);
-        };
+    if (UseMail) {
+        sendTo("email", {
+            html: msg
+        });
+    };
     }
     setState(praefix + "LastMessage", msg);
     WriteMessageLog(msg);
@@ -429,6 +431,8 @@ function VentCheck(x) { //Überprüft wie lange Räume geschlossen sind und gibt
 
                 if (logging) log("Remaining Vent Warn DiffTime at startup= " + CreateTimeString(CalcTimeDiff(VentWarnTime[x] * 24 * 60 * 60 * 1000, RoomStateTimeCount[x])))
                 VentMsgHandler[x] = setTimeout(function () {
+                    RoomStateTimeCount[x] = CalcTimeDiff("now", RoomStateTimeStamp[x]); //RoomstateTimeCount aktualisieren um exakten Wert bei Ausgabe zu haben und 23 Stunden 59 Minuten Meldungen zu vermeiden
+
                     VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]);
                     CreateRoomsWithVentWarnings(x, VentMsg[x]);
                     if (SendVentMsg[x]) {
@@ -443,6 +447,7 @@ function VentCheck(x) { //Überprüft wie lange Räume geschlossen sind und gibt
 
         } else { //Normalbetrieb, kein Init
             VentMsgHandler[x] = setInterval(function () { // Neuen Timeout setzen, volle Warnzeit 
+                RoomStateTimeCount[x] = CalcTimeDiff("now", RoomStateTimeStamp[x]); //RoomstateTimeCount aktualisieren um exakten Wert bei Ausgabe zu haben und 23 Stunden 59 Minuten Meldungen zu vermeiden
                 VentMsg[x] = CreateTimeString(RoomStateTimeCount[x]); //Watch!!
                 CreateRoomsWithVentWarnings(x, VentMsg[x])
                 if (SendVentMsg[x]) {
@@ -590,22 +595,31 @@ function CheckWindow(x) { //Für einzelnes Fenster. Via Trigger angesteuert. Eig
 }
 
 function CheckForHmShit(val, x) {
-    //if (Sensor[x].indexOf("hm-rpc.0") != -1) { //Prüfen ob Sensor= HM Sensor
-    if (getObject(Sensor[x]).common.states) { //Prüfen ob Wertelistentext vorhanden
-        if (logging) log(Sensor[x] + " hat Zustandstext " + getObject(Sensor[x]).common.states[val] + ", Wert= " + val + " Wert wird durch Zustandstext ersetzt");
-        return getObject(Sensor[x]).common.states[val]; //Wert durch Zustandstext ersetzen um HM Wertekuddelmuddel bei HM Sensoren zu kompensieren und in Kleinbuchstaben wandeln
+    if (logging) log("Reaching CheckForHmShit val=" + val + " typof val=" + typeof (val) + " x=" + x + " Sensor[x]=" + Sensor[x]);
+
+    if (Sensor[x].indexOf("hm-rpc.0") != -1) { //Prüfen ob Sensor= HM Sensor
+        if (getObject(Sensor[x]).common.states) { //Prüfen ob Wertelistentext vorhanden
+            if (logging) log(Sensor[x] + " hat Zustandstext " + getObject(Sensor[x]).common.states[val] + ", Wert= " + val + " Wert wird durch Zustandstext ersetzt");
+            return getObject(Sensor[x]).common.states[val]; //Wert durch Zustandstext ersetzen um HM Wertekuddelmuddel bei HM Sensoren zu kompensieren und in Kleinbuchstaben wandeln
+        }
+        else {
+            // if (logging) log(Sensor[x] + " hat keinen Zustandstext, Wert wird beibehalten")
+            return val;
+        };
     }
     else {
         // if (logging) log(Sensor[x] + " hat keinen Zustandstext, Wert wird beibehalten")
         return val;
     };
-    //};
+
 }
 
 
 function SimplyfyWindowStates(val, x) { //Die verschiedenen Gerätestates zu open, close oder tilted vereinfachen
-    val = CheckForHmShit(val, x);
+
     val = String(val).toLowerCase();
+    val = CheckForHmShit(val, x);
+
 
     if (WindowIsOpenWhen.indexOf(val) != -1) { // Suche in Fensteroffenarray, wenn gefunden, Status auf open setzen
         return "open";
@@ -679,6 +693,8 @@ function CreateTimeString(mstime) {
         //if (logging) log(TimeString);
     */
     if (TimeString == "") TimeString = "gerade eben"
+    //if (logging) log("days=" + days + ", hours=" + hours + ", mins=" + mins + ", seks=" + seks + ", Timestring=" + TimeString)
+
     return TimeString.trim();
 }
 
@@ -708,12 +724,13 @@ function CreateTrigger() {
             if (logging) log("Trigger= " + x + " Wert= " + dp.state.val + " Alter Wert= " + dp.oldState.val);
             if (dp.channelId.search(praefix) == -1) { //Ausschliessen dass das Scriptverzeichnis zum Triggern verwendet wird
                 if (IgnoreInProcess[x] == true) { //Bei erster Triggerung aktuellen Sensorwert merken und Timeout starten
+                    log("Oldstate=" + dp.oldState.val)
                     IgnoreValue[x] = SimplyfyWindowStates(dp.oldState.val, x);
                     IgnoreInProcess[x] = false;
                     if (logging) log("Activating Ignore Timeout for " + x + ", Value to ignore=" + IgnoreValue[x]);
                     setTimeout(function () {
-                        //if (logging) log("InTimeout - Trigger= " + x + " Wert= " + dp.state.val + " Alter Wert= " + dp.oldState.val);
-                        if (getState(Sensor[x]).val != IgnoreValue[x]) { //Nachdem Timeout abgelaufen, vergleichen ob gemerkter Wert mit aktuellem Wert übereinstimmt, wenn nicht, Aktionen starten
+                        if (logging) log("InTimeout - Trigger= " + x + " Wert= " + dp.state.val + " Alter Wert= " + dp.oldState.val);
+                        if (SimplyfyWindowStates(getState(Sensor[x]).val, x) != IgnoreValue[x]) { //Nachdem Timeout abgelaufen, vergleichen ob gemerkter Wert mit aktuellem Wert übereinstimmt, wenn nicht, Aktionen starten
                             if (logging) log("Ignore Timeout for " + x + " exceeded, Value change happend, starting Functions");
                             SensorVal[x] = SimplyfyWindowStates(getState(Sensor[x]).val, x); // Alles in String und Kleinschreibweise wandeln
                             SensorOldVal[x] = IgnoreValue[x]; // Alles in String und Kleinschreibweise wandeln
@@ -722,7 +739,7 @@ function CreateTrigger() {
                             CreateRoomsWithTiltedWindowsList();
                             CreateOverviewTable();
                         } else {
-                            if (logging) log("Ignore Timeout for " + x + " exceeded, no Value change, nothing to do. Actual Value=" + getState(Sensor[x]).val + " remembered Value=" + IgnoreValue[x]);
+                            if (logging) log("Ignore Timeout for " + x + " exceeded, no Value change, nothing to do. Actual Value=" + SimplyfyWindowStates(getState(Sensor[x]).val, x) + " remembered Value=" + IgnoreValue[x]);
                         };
                         IgnoreInProcess[x] = true;
                     }, IgnoreTime);
