@@ -1,66 +1,82 @@
 ## (Version 1.5.2)
-## Script um offene Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle. Flexibel konfigurierbar.
+## Script um offene Türen und Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle und/oder Alexa/Telegram/Mail. Flexibel konfigurierbar.
 
 ### Features
 - #### Kann beliebige Tür/Fenster Kontakte verwenden. Noch nicht erfasste Varianten können über die Einstellungen hinzugefügt werden.
 - #### Berücksichtigt mehrflügelige Fenster bzw. mehrere Fenster pro Raum.
-- #### Legt pro Raum sieben Datenpunkte an (Raumfensteroffenzähler, Raumfenstergekipptzähler, Raumfensterstatus und die Einstellfelder für die Lüftungsempfehlung und welche Nachrichten Ihr haben möchtet), sowie 10 Datenpunkte fürs gesamte. (Siehe Beschreibung der Datenpunkte weiter unten)
+- #### Legt pro Raum 13 Datenpunkte an (Raumfensteroffenzähler, Raumfenstergekipptzähler, Raumtürzähler ,Raumfensterstatus und die Einstellfelder für die Lüftungsempfehlung und welche Nachrichten Ihr haben möchtet, sowie das Feld in dem Ihr eine Benutzdefinierte Reihenfolge für die Ausgabe festlegen könnt), sowie 14 Datenpunkte fürs gesamte. (Siehe Beschreibung der Datenpunkte weiter unten)
 - #### Möglichkeit eine Meldung/Ansage via Mail/Telegram/Alexa nach x Minuten einmalig oder zyklisch bis Fensterschließung auszugeben. 
 - #### Meldungen können bei Bedarf über einen Mute Datenpunkt entweder gesamt oder nur für Sprachnachrichten stummgeschaltet werden.
 - #### Gibt dynamische HTML Tabelle mit Übersicht aller Räume und farblicher Kennzeichnug der jeweiligen Stati aus. Verwendete Bilder und Farben sind frei konfigurierbar.
+- #### Möglichkeit die Tabelle nicht/alphabetisch/benutzerdefiniert zu sortieren
 - #### Gibt zeitbezogene Lüftungswarnung aus wenn Fenster für Zeit x (pro Raum einstellbar) nicht geöffnet wurden.
-- #### Gibt Liste mit Räumen für welche aktuell eine Fensteroffen Warnung besteht aus.
-- #### Gibt Liste mit Räumen in denen gekippte Fenster sind aus.
+- #### Gibt Liste mit Räumen für welche aktuell eine Fensteroffen Warnung besteht aus und zählt diese.
+- #### Gibt Liste mit Räumen in denen gekippte Fenster sind aus und zählt diese.
+- #### Gibt Liste mit Räumen in denen offfene Türen sind aus und zählt diese.
 - #### Gibt Liste mit Räumen für welche aktuell eine Lüftungs Warnung besteht aus.
 - #### Kann kurze auf/zu Änderungen innerhalb Zeit x (einstellbar) ignorieren.
 
 # WICHTIG!!!
-### Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie eine Funktion, z.B. "Verschluss" für jeden entsprechenden Datenpunkt.  
+### Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie eine Funktion, z.B. "Fenster", bzw. "Tuer" für jeden entsprechenden Datenpunkt.  
 ### **<span style="color:red">Aber nur für den Datenpunkt, nicht den gesamten Channel!!!</span>**  
 
 ![fensteroffentut1.jpg](/admin/fensteroffentut1.jpg) 
 
 # Installation
-1. Wenn noch nicht geschehen, allen gewünschten Sensoren einen Raum und eine Funktion zuweisen. Die Funktion muss vorher in den Aufzählungen hinzugefügt werden und könnte z.B. "Verschluss" lauten. Soll ein anderer Begriff verwendet werden, muss dies dann auch im Script, Zeile 11 geändert werden. **Nach der Zuweisung, bzw. dem anlegen neuer Aufzählungspunkte ist es oft hilfreich die JS Instanz neu zu starten da diese bei Aufzählungsänderungen gerne mal "zickt" was dann zu Skriptfehlern führt**.
+1. Wenn noch nicht geschehen, allen gewünschten Sensoren einen Raum und eine Funktion zuweisen. Die Funktion muss vorher in den Aufzählungen hinzugefügt werden und könnte z.B. "Fenster", bzw. "Tuer" lauten. Sollen andere Begriffe verwendet werden, muss dies dann auch im Script, Zeile 12 und 13 geändert werden. **Nach der Zuweisung, bzw. dem anlegen neuer Aufzählungspunkte ist es empfehlenswert die JS Instanz neu zu starten da diese bei Aufzählungsänderungen gerne mal "zickt" was dann zu Skriptfehlern führt**.
 2. Das Skript in ein neues JS Projekt kopieren.
 ![fensteroffentut4.jpg](/admin/fensteroffentut4.jpg) 
 ![fensteroffentut5.jpg](/admin/fensteroffentut5.jpg) 
-3. Zeile 9-44 kontrollieren und bei Bedarf anpassen, siehe Beschreibungen direkt neben den Variablen.
-4. Zeile 18-23 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
+3. Zeile 9-53 kontrollieren und bei Bedarf anpassen, siehe Beschreibungen direkt neben den Variablen.
+4. Zeile 18-27 wäre der richtige Ort falls Telegram, Alexa etc. die Meldungen ausgeben sollen.
 5. Skript starten
-6. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Channel mit sieben Datenpunkten geben:
-   1. IsOpen (readonly): Ist in diesem Raum ein oder mehrere Fenster geöffnet?
-   2. RoomOpenWindowCount (readonly): Anzahl der in diesem Raum geöffneten (inkl. der gekippten!) Fenster, 0 wenn alle geschlossen.
-   3. RoomTiltedWindowCount (readonly): Anzahl der in diesem Raum gekippten Fenster, 0 wenn alle geschlossen.
-   4. VentWarnTime: Einstellfeld für die Anzahl Tage nach denen eine Lüftungsempfehlung ausgegeben wird. Lüftungsempfehlung ist bei 0 für diesen Raum deaktiviert.
-   5. SendVentMsg: Einstellfeld ob Ihr für diesen Raum eine Lüftungswarnung haben möchtet.
-   6. SendOpenCloseMsg: Einstellfeld ob Ihr für diesen Raum eine Benachrichtigung für das erste Öffnen und das letzte Schließen der/des Fensters haben möchtet.
-   7. SendWarnMsg: Einstellfeld ob Ihr für diesen Raum eine Offenwarnung haben möchtet.
+6. In den Objekten, unter Javascript.0.FensterUeberwachung sollte es jetzt für jeden definierten Raum einen Channel mit 13 Datenpunkten geben:
+   1. RoomIsOpen (readonly): Sind in diesem Raum ein oder mehrere Fenster und/oder eine Tür geöffnet?
+   2. DoorIsOpen (readonly): Sind in diesem Raum ein oder mehrere Türen geöffnet?
+   3. WindowIsOpen (readonly): Sind in diesem Raum ein oder mehrere Fenster geöffnet?
+   5. RoomOpenCount (readonly): Summe der in diesem Raum geöffneten (inkl. der gekippten!) Fenster und Türen, 0 wenn alle geschlossen.
+   5. RoomOpenWindowCount (readonly): Anzahl der in diesem Raum geöffneten (inkl. der gekippten!) Fenster, 0 wenn alle geschlossen.
+   6. RoomOpenDoorCount (readonly): Anzahl der in diesem Raum geöffneten Türen, 0 wenn alle geschlossen.
+   7. RoomTiltedWindowCount (readonly): Anzahl der in diesem Raum gekippten Fenster, 0 wenn alle geschlossen.
+   8. VentWarnTime: Einstellfeld für die Anzahl Tage nach denen eine Lüftungsempfehlung ausgegeben wird. Lüftungsempfehlung ist bei 0 für diesen Raum deaktiviert.
+   9. SendVentMsg: Einstellfeld ob Ihr für diesen Raum eine Lüftungswarnung haben möchtet.
+   10. SendWindowOpenCloseMsg: Einstellfeld ob Ihr für diesen Raum eine Benachrichtigung für das erste Öffnen und das letzte Schließen der/des Fensters haben möchtet.
+   10. SendDoorOpenCloseMsg: Einstellfeld ob Ihr für diesen Raum eine Benachrichtigung für das erste Öffnen und das letzte Schließen einer Tür haben möchtet.
+   12. SendWindowWarnMsg: Einstellfeld ob Ihr für diesen Raum eine Offenwarnung haben möchtet.
+   13. RoomOrderPriority: Einstellfeld für die benutzerdefinierte Sortierung der Raumliste (wichtige Räume an den Listenanfang um nicht scrollen zu müssen). Keine doppelten Zahlen verwenden! Änderungen hier treten erst nach Skriptneustart in Kraft.
 
-7. Zusätzlich werden 10 weitere Datenpunkte in der Skript Root angelegt:
-   1.  AlleFensterZu: Gesamtstatus aller Räume/Fenster
-   2.  WindowsOpen: Anzahl der offenen Fenster über alle Räume summiert (inkl. der gekippten Fenster!).
-   3.  WindowsTilted: Anzahl der gekippten Fenster über alle Räume summiert.
-   4.  RoomsWithOpenWindows: Eine Textliste von Räumen mit geöffneten Fenstern und deren Anzahl, sowie die Untermenge der davon gekippten Fenster (Funktioniert natürlich nur wenn entsprechende Sensoren verwendet werden die gekippt als Status melden). Sinnvoll für Kurzfassungsanzeigen in Vis.
-   5.  RoomsWithTiltedWindows: Eine Textliste von Räumen mit gekippten Fenstern und deren Anzahl. Sinnvoll für Kurzfassungsanzeigen in Vis (Funktioniert natürlich nur wenn entsprechende Sensoren verwendet werden die gekippt als Status melden). 
-   6.  RoomsWithVentWarning: Eine Textliste von Räumen bei denen eine Lüftungswarnung besteht.
-   7.  LastMessage: Die zuletzt ausgegebene Nachricht. Ermöglicht es die Meldungen mit History zu erfassen oder mit Vis auszugeben.
-   8.  MessageLog: Ein kleines Log der ausgegebenen Meldungen mit Zeitstempel. Zeitstempel Format und max. Anzahl der Logeinträge in den Einstellungen konfigurierbar. Default Trennzeichen ist ">br>", somit kann die Liste direkt in einem HTML Widget via Binding (**{javascript.0.FensterUeberwachung.MessageLog}**) in Vis ausgegeben werden.
-   9.  OverviewTable: Dynamisch erzeugte HTML Tabelle mit allen Räumen und den jeweiligen Fensterstati. Verwendung in Vis als Binding: **{javascript.0.FensterUeberwachung.OverviewTable}** in einem HTML Widget, optimale Breite 310px, Hintergrundfarbe, Schriftfarbe und Schriftart nach Wahl.  
-   10. MuteMode: Bietet die Möglichkeit via Datenpunkt z.B. nachts Nachrichtenausgaben zu verhindern. 
+7. Zusätzlich werden 14 weitere Datenpunkte in der Skript Root ("javascript.0.FensterUeberwachung") angelegt:
+   1.  AllWindowsClosed (Ersetzt ab V.1.6.0 die Bezeichnung "AlleFensterZu"): Gesamtstatus aller Fenster
+   2.  AllDoorsClosed: Gesamtstatus aller Türen
+   3.  DoorsOpen: Anzahl der offenen Türen über alle Räume summiert.
+   4.  WindowsOpen: Anzahl der offenen Fenster über alle Räume summiert (inkl. der gekippten Fenster!).
+   5.  WindowsTilted: Anzahl der gekippten Fenster über alle Räume summiert.
+   7.  RoomsWithOpenDoors: Eine Textliste von Räumen mit geöffneten Türen und deren Anzahl. Sinnvoll für Kurzfassungsanzeigen in Vis.
+   7.  RoomsWithOpenWindows: Eine Textliste von Räumen mit geöffneten Fenstern und deren Anzahl, sowie die Untermenge der davon gekippten Fenster (Funktioniert natürlich nur wenn entsprechende Sensoren verwendet werden die gekippt als Status melden). Sinnvoll für Kurzfassungsanzeigen in Vis.
+   8.  RoomsWithTiltedWindows: Eine Textliste von Räumen mit gekippten Fenstern und deren Anzahl. Sinnvoll für Kurzfassungsanzeigen in Vis (Funktioniert natürlich nur wenn entsprechende Sensoren verwendet werden die gekippt als Status melden). 
+   7.  RoomsWithOpenings: Eine Textliste von Räumen mit geöffneten Fenstern und Türen sowie deren Anzahl, sowie die Untermenge der davon gekippten Fenster (Funktioniert natürlich nur wenn entsprechende Sensoren verwendet werden die gekippt als Status melden). Sinnvoll für Kurzfassungsanzeigen in Vis.
+   10. RoomsWithVentWarning: Eine Textliste von Räumen bei denen eine Lüftungswarnung besteht.
+   11. LastMessage: Die zuletzt ausgegebene Nachricht. Ermöglicht es die Meldungen mit History zu erfassen oder mit Vis auszugeben.
+   12. MessageLog: Ein kleines Log der ausgegebenen Meldungen mit Zeitstempel. Zeitstempel Format und max. Anzahl der Logeinträge in den Einstellungen konfigurierbar. Default Trennzeichen ist ">br>", somit kann die Liste direkt in einem HTML Widget via Binding (**{javascript.0.FensterUeberwachung.MessageLog}**) in Vis ausgegeben werden.
+   13. OverviewTable: Dynamisch erzeugte HTML Tabelle mit allen Räumen und den jeweiligen Fensterstati. Verwendung in Vis als Binding: **{javascript.0.FensterUeberwachung.OverviewTable}** in einem HTML Widget, optimale Breite 310px, Hintergrundfarbe, Schriftfarbe und Schriftart nach Wahl.  
+   14. MuteMode: Bietet die Möglichkeit via Datenpunkt z.B. nachts Nachrichtenausgaben zu verhindern. 
         - 0 = Alle Ansagen werden ausgegeben. 
         - 1 = "Stumme" Nachrichten via Telegram/Mail etc. werden ausgegeben, Sprachausgaben geblockt. 
         - 2 = Alle Nachrichten werden geblockt.
  
 ![fensteroffentut3.jpg](/admin/fensteroffentut3.jpg) 
 
-Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen (wird als Adapter installiert) oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 27 - 29 angepasst werden. Sieht dann z.B. so aus:  
+Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr diese nicht installiert haben, so könnt Ihr dies nachholen (wird als Adapter installiert) oder beliebige eigene Icons verwenden, hierzu muß dann jedoch der Name und Pfad im Skript, Zeile 30 - 36 angepasst werden. Sieht dann z.B. so aus:  
 
 ![fensteroffentut2c.png](/admin/fensteroffentut2c.png)  
 
-All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
+All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 24.06.20 (V1.6.0)
+- Add: Raumliste kann jetzt alphabetisch oder benutzerdefiniert sortiert werden, wodurch es möglich wird gewünschte Räume für die Tabellemausgabe in der Reihenfolge nach oben zu schieben. 
+- Add: Es ist jetzt möglich auch Türen separat mitzuzählen, hierfür muß eine zweite Funktion, z.B. "Tuer" festgelegt und den entsprechenden Türjkontakten zugewiesen werden. Bei der Tabellenausgabe gibt es eine weitere Spalte für Türen mit eigenem Icon und eigener Farbe. Die gesamt Textausgabe wurde angepasst und nennt nun pro geöffneten Raum, sowohl Fenster als auch Türöffnungsstatusänderungen.
+- Change, der bisherige Defaultwert für die Funktionsbezeichnung der Fenster wurde geändert von "Verschluss" zu "Fenster".
 #### 03.05.20 (V1.5.3)
 - Fix: Zeitversatz bei Lüftungsmeldungen behoben welcher zu 23 Stunden, 59 Minuten Meldungen (statt 1 Tag) führte.
 - Fix: Mail Messaging auf Html umgestellt damit Umbrüche korrekt angezeigt werden.
