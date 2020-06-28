@@ -1,4 +1,4 @@
-// V1.6.0 vom 26.6.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.1" //vom 28.6.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -11,7 +11,9 @@ const praefix = "javascript.0.FensterUeberwachung."; //Grundpfad für Script DPs
 const PresenceDp = "" //Pfad zum Anwesenheitsdatenpunkt, leer lassen wenn nicht vorhanden
 const WhichWindowFunctionToUse = "Fenster"; // Legt fest nach welchem Begriff in Funktionen gesucht wird. Diese Funktion nur dem Datenpunkt zuweisen, NICHT dem ganzen Channel!
 const WhichDoorFunctionToUse = "Tuer"; // Legt fest nach welchem Begriff in Funktionen gesucht wird. Diese Funktion nur dem Datenpunkt zuweisen, NICHT dem ganzen Channel!
-const IgnoreTime = 10000; // 10000 ms = 10 Sekunden - Zeit in ms für die kurzzeitiges öffnen/schliessen ignoriert wird
+const WindowIgnoreTime = 10000; // 10000 ms = 10 Sekunden - Zeit in ms für die kurzzeitiges öffnen/schliessen ignoriert wird
+const DoorIgnoreTime = 1000; // 1000 ms = 1 Sekunden - Zeit in ms für die kurzzeitiges öffnen/schliessen ignoriert wird
+
 
 //Nachrichteneinstellungen
 const ZeitBisNachricht = 900000 // 300000 ms = 5 Minuten - Zyklus- bzw. Ablaufzeit für Fensteroffenwarnung/en
@@ -22,7 +24,7 @@ const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer.
 const UseMail = false; //Nachricht via Mail versenden?
 const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
-const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
+const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
 const NoMsgAtPresence = false; //Sollen Nachrichten bei Anwesenheit unterdrückt werden?
 
 //Tabelleneinstellungen
@@ -66,7 +68,7 @@ const WindowIsOpenWhen = ["true", "offen", "open", "opened", "2"]; // Hier könn
 const WindowIsClosedWhen = ["false", "geschlossen", "closed", "0"]; // Hier können eigene States für geschlossen angegeben werden, immer !!! in Kleinschreibung
 const WindowIsTiltedWhen = ["tilted", "gekippt", "1"]; // Hier können eigene States für gekippt angegeben werden, immer !!! in Kleinschreibung
 
-let OpenDoorCount = 0;
+let OpenDoorCount = 0;  // Gesamtzahl der geöffneten Türen
 let OpenWindowCount = 0; // Gesamtzahl der geöffneten Fenster
 let TiltedWindowCount = 0; // Davon Anzahl der gekippten Fenster
 
@@ -95,8 +97,10 @@ const SensorOldVal = []; //Alte Sensorwerte als Array ablegen
 const Laufzeit = []; //Timer Laufzeit pro Fenster
 let RoomList = []; // Raumlisten Array
 const VentWarnTime = []; // Array mit Zeiten nach dem eine Lüftungsempfehlung ausgegeben wird
-const RoomStateTimeStamp = []; //Letzte Änderung des Raumstatus
+const RoomStateTimeStamp = []; //Letzte Änderung des Fenster-Raumstatus
 const RoomStateTimeCount = []; // Zeitspanne seit letzter Änderung
+const RoomDoorStateTimeStamp = []; //Letzte Änderung des Tür-Raumstatus
+const RoomDoorStateTimeCount = []; // Zeitspanne seit letzter Änderung
 let z = 0; //Zähler
 let DpCount = 0; //Zähler
 let IsInit = true // Marker - Wird nach initialisierung auf false gesetzt
@@ -107,6 +111,8 @@ let MuteMode = 0; //Stummschaltungsmodus für Nachrichten. 0=Alles erlaubt, 1=Sp
 let Presence = true; //Anwesenheit als gegeben initialisieren
 const IgnoreInProcess = []; //Läuft gerade eine Überprüfung ob eine Statusänderung ignoriert werden muß?
 let SensorCount = 0; //Hilfszähler weil y bei mehreren Funktionen mehrmals bei 0 beginnt
+
+log("starting Fensterskript, Version " + Skriptversion);
 
 for (let x in Funktionen) {        // loop ueber alle Functions
 
@@ -123,12 +129,6 @@ for (let x in Funktionen) {        // loop ueber alle Functions
 
                 let room = getObject(Sensor[SensorCount], 'rooms').enumNames[0];
                 if (typeof room == 'object') room = room.de;
-                /* if (logging) {
-                     if (RoomHas[z] == 1) log("Raum " + z + " = " + room + " hat Türsensor/en");
-                     if (RoomHas[z] == 2) log("Raum " + z + " = " + room + " hat Fenstersensor/en");
-                     if (RoomHas[z] == 3) log("Raum " + z + " = " + room + " hat Tür- und Fenstersensor/en");
-                 }; */
-
                 if (RoomList.indexOf(room) == -1) { //Raumliste ohne Raumduplikate und zugehörige Dps erzeugen
                     //Datenpunkte pro Raum vorbereiten
                     States[DpCount] = { id: praefix + room + ".RoomOrderPriority", initial: z, forceCreation: false, common: { read: true, write: true, name: "Raumpriorität für Tabelle", role: "state", type: "number", def: z } };
@@ -379,7 +379,7 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
     TableSubString[0] = "<td style='border: 1px solid black; background-color:";
     TableSubString[1] = ";'><img style='margin: auto; display: block; filter: invert(";
     TableSubString[2] = ";'><img style='margin: auto; display: block; opacity: 0.2; filter: invert(";
-    
+
 
     TableSubString[5] = "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center;background-color:";
     TableSubString[6] = "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; padding-top: 4px; font-size: 16px; font-weight: bold; background-color:";
@@ -402,9 +402,10 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
         //Tabelle der Raumdetails
         for (let x = 0; x < RoomList.length; x++) { //Alle Räume durchgehen
             OverviewTable += "<tr>";
-
+            RoomStateTimeCount[x] = CalcTimeDiff("now", RoomStateTimeStamp[x]);
+            RoomDoorStateTimeCount[x] = CalcTimeDiff("now", RoomDoorStateTimeStamp[x]);
+            //log("x=" + x + " Raum = "+RoomList[x] + " RoomStateTimeCount[x] = "+CreateTimeString(RoomStateTimeCount[x]) +" RoomDoorStateTimeCount[x] = "+CreateTimeString(RoomDoorStateTimeCount[x]))
             if (RoomOpenWindowCount[x] > 0 || RoomOpenDoorCount[x] > 0) { // Räume mit offenen Fenstern oder Türen
-                RoomStateTimeCount[x] = CalcTimeDiff("now", RoomStateTimeStamp[x]);
 
                 if (RoomTiltedWindowCount[x] == 0 && RoomOpenWindowCount[x] > 0 && RoomOpenDoorCount[x] == 0) { //Fenster ist offen, keines ist gekippt, Tür/en sind geschlossen
                     if (ShowWindowCol) {
@@ -424,7 +425,8 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     };
                     OverviewTable += TableSubString[5] + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
                     OverviewTable += TableSubString[6] + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
-                    OverviewTable += "geöffnet";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geöffnet: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geschlossen: " + CreateTimeString(RoomDoorStateTimeCount[x]);
 
                 }
                 else if (RoomTiltedWindowCount[x] > 0 && RoomTiltedWindowCount[x] == RoomOpenWindowCount[x] && RoomOpenDoorCount[x] == 0) { //Fenster ist gekippt, Tür/en sind geschlossen
@@ -444,8 +446,8 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     };
                     OverviewTable += TableSubString[5] + TiltedWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
                     OverviewTable += TableSubString[6] + TiltedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
-                    OverviewTable += "gekippt";
-
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster gekippt:" + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geschlossen:" + CreateTimeString(RoomDoorStateTimeCount[x]);
                 }
                 else if (RoomTiltedWindowCount[x] < RoomOpenWindowCount[x] && RoomOpenDoorCount[x] == 0) { // Fenster sind offen und gekippt, Tür/en sind geschlossen
                     if (ShowWindowCol) {
@@ -464,8 +466,8 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     };
                     OverviewTable += TableSubString[5] + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
                     OverviewTable += TableSubString[6] + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
-                    OverviewTable += "geöffnet/gekippt";
-
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geöffnet/gekippt:" + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geschlossen: " + CreateTimeString(RoomDoorStateTimeCount[x]);
                 }
                 else if (RoomOpenDoorCount[x] > 0 && RoomOpenWindowCount[x] == 0) { // Tür ist geöffnet, kein Fenster ist geöffnet
                     if (ShowWindowCol) {
@@ -484,7 +486,8 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     };
                     OverviewTable += TableSubString[5] + OpenDoorColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
                     OverviewTable += TableSubString[6] + OpenDoorColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
-                    OverviewTable += "Fenster geschlossen";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geschlossen: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geöffnet: " + CreateTimeString(RoomDoorStateTimeCount[x]);
                 }
                 else if (RoomOpenWindowCount[x] > 0 && RoomTiltedWindowCount[x] == 0 && RoomOpenDoorCount[x] > 0) { //Fenster ist offen, keines ist gekippt, Tür/en sind geöffnet
                     if (ShowWindowCol) {
@@ -503,8 +506,8 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     };
                     OverviewTable += TableSubString[5] + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
                     OverviewTable += TableSubString[6] + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
-                    OverviewTable += "geöffnet";
-
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geöffnet: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geöffnet: " + CreateTimeString(RoomDoorStateTimeCount[x]);
                 }
                 else if (RoomTiltedWindowCount[x] > 0 && RoomTiltedWindowCount[x] == RoomOpenWindowCount[x] && RoomOpenDoorCount[x] > 0) { //Fenster ist gekippt, Tür/en sind geöffnet
                     if (ShowWindowCol) {
@@ -523,8 +526,8 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     };
                     OverviewTable += TableSubString[5] + TiltedWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
                     OverviewTable += TableSubString[6] + TiltedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
-                    OverviewTable += "gekippt";
-
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster gekippt: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geöffnet: " + CreateTimeString(RoomDoorStateTimeCount[x]);
                 }
                 else if (RoomOpenWindowCount[x] > 0 && RoomTiltedWindowCount[x] < RoomOpenWindowCount[x] && RoomOpenDoorCount[x] > 0) { // Fenster sind offen und gekippt, Tür/en sind geöffnet
                     if (ShowWindowCol) {
@@ -543,13 +546,14 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     };
                     OverviewTable += TableSubString[5] + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
                     OverviewTable += TableSubString[6] + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
-                    OverviewTable += "geöffnet/gekippt";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geöffnet/gekippt: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geöffnet: " + CreateTimeString(RoomDoorStateTimeCount[x]);
                 }
 
-                OverviewTable += ":<br> " + CreateTimeString(RoomStateTimeCount[x]) + "</td></tr>";
+                OverviewTable += "</td></tr>";
             }
             else { // Geschlossene Räume
-                RoomStateTimeCount[x] = CalcTimeDiff("now", RoomStateTimeStamp[x]);
+
                 if (VentMsg[x] == "") {
                     if (ShowWindowCol) {
                         if (RoomHas[x] == 2 || RoomHas[x] == 3) {        //RoomHas[] 0=Weder Tür noch Fenster, 1=Tür, 2=Fenster, 3=Tür+Fenster
@@ -567,9 +571,12 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     };
 
                     OverviewTable += "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center; background-color:" + ClosedWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
-                    OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>geschlossen:<br> " + CreateTimeString(RoomStateTimeCount[x]) + "</div></td></tr>";
+
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Fenster geschlossen: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Tür geschlossen: " + CreateTimeString(RoomDoorStateTimeCount[x]);
+                    OverviewTable += "</div></td></tr>"
                 }
-                else {
+                else { //geschlossen + Lüftungswarnung
                     if (ShowWindowCol) {
                         if (RoomHas[x] == 2 || RoomHas[x] == 3) {        //RoomHas[] 0=Weder Tür noch Fenster, 1=Tür, 2=Fenster, 3=Tür+Fenster
                             OverviewTable += TableSubString[0] + VentWarnColor + ";'><img style=' margin: auto; display: block; filter: invert(" + ImgInvert + "); height: 40px;'  src='" + VentImg + "'></td>";
@@ -586,7 +593,8 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     };
 
                     OverviewTable += "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center; background-color:" + VentWarnColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
-                    OverviewTable += TableSubString[6] + VentWarnColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'> nicht gelüftet:<br>" + CreateTimeString(RoomStateTimeCount[x]) + "</div></td></tr>";
+                    OverviewTable += TableSubString[6] + VentWarnColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>Raum nicht gelüftet: " + CreateTimeString(RoomStateTimeCount[x]);
+                    OverviewTable += "</div></td></tr>";
                 };
             };
         };
@@ -756,8 +764,7 @@ function CreateRoomsWithVentWarnings(x, Warning) { //Erzeugt Liste mit Räumen f
 
 function VentCheck(x) { //Überprüft wie lange Räume geschlossen sind und gibt Lüftungswarnung aus
     if (logging) log("Reaching VentCheck x=" + x + " Init=" + IsInit + " VentwarnTime[x]=" + VentWarnTime[x] + " RoomStateTimeStamp[x]=" + RoomStateTimeStamp[x]);
-
-    if (RoomOpenWindowCount[x] == 0 && VentWarnTime[x] != 0) { //VentTimeout starten wenn Raum geschlossen und Warnzeit nicht 0 (= deaktiviert) 
+    if (RoomOpenWindowCount[x] == 0 && VentWarnTime[x] != 0) { //VentTimeout starten wenn alle Fenster im Raum geschlossen und Warnzeit nicht 0 (= deaktiviert) 
         if (logging) log("Starting VentInterval for Room " + RoomList[x] + " Time set to: " + VentWarnTime[x] + " days");
         if (IsInit) { //Bei Skriptstart
             if (CalcTimeDiff("now", RoomStateTimeStamp[x]) >= getDateObject(VentWarnTime[x] * 24 * 60 * 60 * 1000).getTime()) { //Wenn Ventwarnzeit bei Skriptstart schon überschritten, sofortige Meldung
@@ -796,7 +803,7 @@ function VentCheck(x) { //Überprüft wie lange Räume geschlossen sind und gibt
 
         if (logging) log("VentMsg=" + VentMsg[x]);
     }
-    else {
+    else if (RoomOpenWindowCount[x] != 0 || VentWarnTime[x] == 0){
         if (logging) log("Room " + x + " = " + RoomList[x] + " is open or disabled, no vent warning set");
         CreateRoomsWithVentWarnings(x, "");
         ClearVentTime(x);
@@ -825,6 +832,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
 
         if (SensorType[x] == "Window") {
             if (RoomOpenWindowCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".WindowIsOpen", true);
+            if (RoomOpenWindowCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".RoomIsOpen", true);
 
             OpenWindowCount++; //Gesamtfensterzähler erhöhen
             RoomOpenWindowCount[TempRoomIndex]++; //Raumfensterzähler erhöhen
@@ -864,6 +872,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
             };
         } else if (SensorType[x] == "Door") {
             if (RoomOpenDoorCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".DoorIsOpen", true);
+            if (RoomOpenDoorCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".RoomIsOpen", true);
 
             OpenDoorCount++; //Gesamtfensterzähler erhöhen
             RoomOpenDoorCount[TempRoomIndex]++; //Raumfensterzähler erhöhen
@@ -873,7 +882,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
 
             if (!IsInit) {
                 if (RoomOpenDoorCount[TempRoomIndex] == 1) {
-                    //RoomStateTimeStamp[TempRoomIndex] = new Date().getTime(); //Bei Erstöffnung Zeitstempel für Raum auf jetzt setzen
+                    RoomDoorStateTimeStamp[TempRoomIndex] = new Date().getTime(); //Bei Erstöffnung Zeitstempel für Raum auf jetzt setzen
                 };
                 if (SensorVal[x] == "open") {
                     if (logging) log(TempRoom + " Tür geöffnet");
@@ -907,7 +916,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
                 if (OpenDoorCount > 0) OpenDoorCount--;
                 if (RoomOpenDoorCount[TempRoomIndex] > 0) RoomOpenDoorCount[TempRoomIndex]--;
                 if (RoomOpenDoorCount[TempRoomIndex] == 0) { // Wenn letzte Tür geschlossen
-                    //RoomStateTimeStamp[TempRoomIndex] = new Date().getTime(); //Bei schliessen Zeitstempel für Raum setzen
+                    RoomDoorStateTimeStamp[TempRoomIndex] = new Date().getTime(); //Bei schliessen Zeitstempel für Raum setzen
                     if (logging) log(TempRoom + " Tür geschlossen.");
                     if (SendDoorOpenCloseMsg[TempRoomIndex]) Meldung(ReplaceChars(TempRoom) + " Tür geschlossen!");
                     if (UseEventLog) WriteEventLog(ReplaceChars(TempRoom) + " Tür geschlossen!");
@@ -925,36 +934,42 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
         if (RoomOpenDoorCount[TempRoomIndex] == 0) { //Wenn alle Türen im Raum geschlossen, Dp aktualisieren
             setState(praefix + TempRoom + ".DoorIsOpen", false);
         };
+
+        if (RoomOpenDoorCount[TempRoomIndex] == 0 && RoomOpenWindowCount[TempRoomIndex] == 0) { //Wenn alle Türen im Raum geschlossen, Dp aktualisieren
+            setState(praefix + TempRoom + ".RoomIsOpen", false);
+        };
     };
 
     //*************Bereich gekippte Fenster */
-    if (SensorVal[x] == "tilted") {
-        if (logging) log("Reaching tilted+ in checkWindow");
-        TiltedWindowCount++; //Gekippte Fenster Zähler erhöhen
-        RoomTiltedWindowCount[TempRoomIndex]++;
-        setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
-        if (logging) log("TiltedWindowCount=" + TiltedWindowCount + " RoomTiltedWindowCount=" + RoomTiltedWindowCount[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
-    }
-    else if ((SensorVal[x] != "tilted" && SensorOldVal[x] == "tilted") && IsInit == false) { //Bei Wechsel von gekippt auf offen oder geschlossen und keine Initphase
-        if (logging) log("Reaching tilted- in checkWindow");
-        TiltedWindowCount--; //Gekippte Fenster Zähler erniedrigen
-        RoomTiltedWindowCount[TempRoomIndex]--;
-        if (TiltedWindowCount < 0) TiltedWindowCount = 0;
-        if (RoomTiltedWindowCount[x] < 0) RoomTiltedWindowCount[x] = 0;
+    if (SensorType[x] == "Window") {
+        if (SensorVal[x] == "tilted") {
+            if (logging) log("Reaching tilted+ in checkWindow");
+            TiltedWindowCount++; //Gekippte Fenster Zähler erhöhen
+            RoomTiltedWindowCount[TempRoomIndex]++;
+            setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
+            if (logging) log("TiltedWindowCount=" + TiltedWindowCount + " RoomTiltedWindowCount=" + RoomTiltedWindowCount[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
+        }
+        else if ((SensorVal[x] != "tilted" && SensorOldVal[x] == "tilted") && IsInit == false) { //Bei Wechsel von gekippt auf offen oder geschlossen und keine Initphase
+            if (logging) log("Reaching tilted- in checkWindow");
+            TiltedWindowCount--; //Gekippte Fenster Zähler erniedrigen
+            RoomTiltedWindowCount[TempRoomIndex]--;
+            if (TiltedWindowCount < 0) TiltedWindowCount = 0;
+            if (RoomTiltedWindowCount[x] < 0) RoomTiltedWindowCount[x] = 0;
 
-        setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
-        if (logging) log("TiltedWindowCount=" + TiltedWindowCount + " RoomTiltedWindowCount=" + RoomTiltedWindowCount[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
-    };
+            setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
+            if (logging) log("TiltedWindowCount=" + TiltedWindowCount + " RoomTiltedWindowCount=" + RoomTiltedWindowCount[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
+        };
 
-    if (IsInit && RoomTiltedWindowCount[TempRoomIndex] == 0) {
-        setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
-    };
+        if (IsInit && RoomTiltedWindowCount[TempRoomIndex] == 0) {
+            setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
+        };
 
-    if (RoomOpenWindowCount[x] == 0 && RoomOpenDoorCount[x] == 0) {
-        setState(praefix + TempRoom + ".RoomIsOpen", false);
-    }
-    else {
-        setState(praefix + TempRoom + ".RoomIsOpen", true);
+        if (RoomOpenWindowCount[x] == 0 && RoomOpenDoorCount[x] == 0) {
+            setState(praefix + TempRoom + ".RoomIsOpen", false);
+        }
+        else {
+            setState(praefix + TempRoom + ".RoomIsOpen", true);
+        };
     }
     /***************Ende Bereich gekippte Fenster */
 
@@ -989,13 +1004,17 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
 
     if (IsInit) { // Wenn in Initialisierungsphase (Skriptstart)
         RoomStateTimeStamp[TempRoomIndex] = getState(praefix + RoomList[TempRoomIndex] + ".WindowIsOpen").lc;
+        RoomDoorStateTimeStamp[TempRoomIndex] = getState(praefix + RoomList[TempRoomIndex] + ".DoorIsOpen").lc;
+
     }
     else {
-        VentCheck(TempRoomIndex);
+        if (SensorType[x] == "Window") VentCheck(TempRoomIndex);
         if (logging) log("RoomStateTimeStamp at checkWindow= " + RoomStateTimeStamp[TempRoomIndex] + " ms =" + formatDate(RoomStateTimeStamp[TempRoomIndex], LogTimeStampFormat));
     };
 
     RoomStateTimeCount[TempRoomIndex] = CalcTimeDiff("now", RoomStateTimeStamp[TempRoomIndex]);
+    RoomDoorStateTimeCount[TempRoomIndex] = CalcTimeDiff("now", RoomDoorStateTimeStamp[TempRoomIndex]);
+
 }
 
 function CheckForHmShit(val, x) {
@@ -1064,9 +1083,9 @@ function CreateTimeString(mstime) {
 
     if (hours > 0) {
         if (hours == 1) { //Singular
-            TimeString = TimeString + hours + " Stunde ";
+            TimeString = TimeString + hours + " Std. ";
         } else { //Plural
-            TimeString = TimeString + hours + " Stunden ";
+            TimeString = TimeString + hours + " Std. ";
         };
     } else {
         TimeString = TimeString + "";
@@ -1074,9 +1093,9 @@ function CreateTimeString(mstime) {
 
     if (mins > 0) {
         if (mins == 1) { //Singular
-            TimeString = TimeString + mins + " Minute ";
+            TimeString = TimeString + mins + " Min. ";
         } else { //Plural
-            TimeString = TimeString + mins + " Minuten ";
+            TimeString = TimeString + mins + " Min. ";
         };
     } else {
         TimeString = TimeString + "";
@@ -1118,9 +1137,16 @@ function ClearWarnTime(x) {
 
 function CreateTrigger() {
     //Trigger für Sensoren erzeugen
+    let IgnoreTime;
     for (let x = 0; x < Sensor.length; x++) { //Alle Sensoren durchlaufen
         IgnoreInProcess[x] = true;
         on(Sensor[x], function (dp) { //Trigger in Schleife erstellen
+            if (SensorType[x] == "Window") {
+                IgnoreTime = WindowIgnoreTime
+            } else if (SensorType[x] == "Door") {
+                IgnoreTime = DoorIgnoreTime
+            };
+
             if (logging) log("Trigger= " + x + " Wert= " + dp.state.val + " Alter Wert= " + dp.oldState.val);
             if (dp.channelId.search(praefix) == -1) { //Ausschliessen dass das Scriptverzeichnis zum Triggern verwendet wird
                 if (IgnoreInProcess[x] == true) { //Bei erster Triggerung aktuellen Sensorwert merken und Timeout starten

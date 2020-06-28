@@ -73,10 +73,12 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 24.06.20 (V1.6.1)
+- Change: Tabellendetails hinzugefügt/geändert.
 #### 24.06.20 (V1.6.0)
 - Add: Raumliste kann jetzt alphabetisch oder benutzerdefiniert sortiert werden, wodurch es möglich wird gewünschte Räume für die Tabellemausgabe in der Reihenfolge nach oben zu schieben. 
-- Add: Es ist jetzt möglich auch Türen separat mitzuzählen, hierfür muß eine zweite Funktion, z.B. "Tuer" festgelegt und den entsprechenden Türjkontakten zugewiesen werden. Bei der Tabellenausgabe gibt es eine weitere Spalte für Türen mit eigenem Icon und eigener Farbe. Die gesamt Textausgabe wurde angepasst und nennt nun pro geöffneten Raum, sowohl Fenster als auch Türöffnungsstatusänderungen.
-- Change, der bisherige Defaultwert für die Funktionsbezeichnung der Fenster wurde geändert von "Verschluss" zu "Fenster".
+- Add: Es ist jetzt möglich auch Türen separat mitzuzählen, hierfür muß eine zweite Funktion, z.B. "Tuer" festgelegt und den entsprechenden Türkontakten zugewiesen werden. Bei der Tabellenausgabe gibt es eine weitere Spalte für Türen mit eigenem Icon und eigener Farbe. Die gesamte Textausgabe wurde angepasst und nennt nun pro geöffneten Raum, sowohl Fenster als auch Türöffnungsstatusänderungen.
+- Change: der bisherige Defaultwert für die Funktionsbezeichnung der Fenster wurde geändert von "Verschluss" zu "Fenster".
 #### 03.05.20 (V1.5.3)
 - Fix: Zeitversatz bei Lüftungsmeldungen behoben welcher zu 23 Stunden, 59 Minuten Meldungen (statt 1 Tag) führte.
 - Fix: Mail Messaging auf Html umgestellt damit Umbrüche korrekt angezeigt werden.
