@@ -73,8 +73,9 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
-#### 24.06.20 (V1.6.1)
+#### 24.06.20 (V1.6.2)
 - Change: Tabellendetails hinzugefügt/geändert.
+- Change: Zahlenspalte angepasst.
 #### 24.06.20 (V1.6.0)
 - Add: Raumliste kann jetzt alphabetisch oder benutzerdefiniert sortiert werden, wodurch es möglich wird gewünschte Räume für die Tabellemausgabe in der Reihenfolge nach oben zu schieben. 
 - Add: Es ist jetzt möglich auch Türen separat mitzuzählen, hierfür muß eine zweite Funktion, z.B. "Tuer" festgelegt und den entsprechenden Türkontakten zugewiesen werden. Bei der Tabellenausgabe gibt es eine weitere Spalte für Türen mit eigenem Icon und eigener Farbe. Die gesamte Textausgabe wurde angepasst und nennt nun pro geöffneten Raum, sowohl Fenster als auch Türöffnungsstatusänderungen.

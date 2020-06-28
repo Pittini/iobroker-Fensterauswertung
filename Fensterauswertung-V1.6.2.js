@@ -1,4 +1,4 @@
-const Skriptversion = "1.6.1" //vom 28.6.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.2" //vom 28.6.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -423,7 +423,12 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                             OverviewTable += TableSubString[0] + NoSensorColor + TableSubString[2] + ImgInvert + "); height: 40px;' src='" + NoSensorImg + "'></td>";
                         };
                     };
-                    OverviewTable += TableSubString[5] + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
+
+                    OverviewTable += TableSubString[5] + OpenWindowColor + ";'>";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += RoomOpenWindowCount[x] + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += RoomOpenDoorCount[x];
+                    OverviewTable += "</td>";
+
                     OverviewTable += TableSubString[6] + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
                     if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geöffnet: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
                     if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geschlossen: " + CreateTimeString(RoomDoorStateTimeCount[x]);
@@ -444,7 +449,11 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                             OverviewTable += TableSubString[0] + NoSensorColor + TableSubString[2] + ImgInvert + "); height: 40px;' src='" + NoSensorImg + "'></td>";
                         };
                     };
-                    OverviewTable += TableSubString[5] + TiltedWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
+                    OverviewTable += TableSubString[5] + TiltedWindowColor + ";'>";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += RoomOpenWindowCount[x] + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += RoomOpenDoorCount[x];
+                    OverviewTable += "</td>";
+
                     OverviewTable += TableSubString[6] + TiltedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
                     if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster gekippt:" + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
                     if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geschlossen:" + CreateTimeString(RoomDoorStateTimeCount[x]);
@@ -464,7 +473,11 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                             OverviewTable += TableSubString[0] + NoSensorColor + TableSubString[2] + ImgInvert + "); height: 40px;' src='" + NoSensorImg + "'></td>";
                         };
                     };
-                    OverviewTable += TableSubString[5] + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
+                    OverviewTable += TableSubString[5] + OpenWindowColor + ";'>";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += RoomOpenWindowCount[x] + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += RoomOpenDoorCount[x];
+                    OverviewTable += "</td>";
+
                     OverviewTable += TableSubString[6] + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
                     if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geöffnet/gekippt:" + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
                     if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geschlossen: " + CreateTimeString(RoomDoorStateTimeCount[x]);
@@ -484,7 +497,11 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                             OverviewTable += TableSubString[0] + NoSensorColor + TableSubString[2] + ImgInvert + "); height: 40px;' src='" + NoSensorImg + "'></td>";
                         };
                     };
-                    OverviewTable += TableSubString[5] + OpenDoorColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
+                    OverviewTable += TableSubString[5] + OpenDoorColor + ";'>";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += RoomOpenWindowCount[x] + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += RoomOpenDoorCount[x];
+                    OverviewTable += "</td>";
+
                     OverviewTable += TableSubString[6] + OpenDoorColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
                     if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geschlossen: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
                     if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geöffnet: " + CreateTimeString(RoomDoorStateTimeCount[x]);
@@ -504,7 +521,11 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                             OverviewTable += TableSubString[0] + NoSensorColor + TableSubString[2] + ImgInvert + "); height: 40px;' src='" + NoSensorImg + "'></td>";
                         };
                     };
-                    OverviewTable += TableSubString[5] + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
+                    OverviewTable += TableSubString[5] + OpenWindowColor + ";'>";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += RoomOpenWindowCount[x] + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += RoomOpenDoorCount[x];
+                    OverviewTable += "</td>";
+
                     OverviewTable += TableSubString[6] + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
                     if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geöffnet: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
                     if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geöffnet: " + CreateTimeString(RoomDoorStateTimeCount[x]);
@@ -524,7 +545,11 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                             OverviewTable += TableSubString[0] + NoSensorColor + TableSubString[2] + ImgInvert + "); height: 40px;' src='" + NoSensorImg + "'></td>";
                         };
                     };
-                    OverviewTable += TableSubString[5] + TiltedWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
+                    OverviewTable += TableSubString[5] + TiltedWindowColor + ";'>";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += RoomOpenWindowCount[x] + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += RoomOpenDoorCount[x];
+                    OverviewTable += "</td>";
+
                     OverviewTable += TableSubString[6] + TiltedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
                     if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster gekippt: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
                     if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geöffnet: " + CreateTimeString(RoomDoorStateTimeCount[x]);
@@ -544,7 +569,11 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                             OverviewTable += TableSubString[0] + NoSensorColor + TableSubString[2] + ImgInvert + "); height: 40px;' src='" + NoSensorImg + "'></td>";
                         };
                     };
-                    OverviewTable += TableSubString[5] + OpenWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
+                    OverviewTable += TableSubString[5] + OpenWindowColor + ";'>";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += RoomOpenWindowCount[x] + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += RoomOpenDoorCount[x];
+                    OverviewTable += "</td>";
+
                     OverviewTable += TableSubString[6] + OpenWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>";
                     if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += "Fenster geöffnet/gekippt: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
                     if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += "Tür geöffnet: " + CreateTimeString(RoomDoorStateTimeCount[x]);
@@ -570,7 +599,11 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                         };
                     };
 
-                    OverviewTable += "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center; background-color:" + ClosedWindowColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
+                    OverviewTable += "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center; background-color:"+ ClosedWindowColor + ";'>" ;
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += RoomOpenWindowCount[x] + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += RoomOpenDoorCount[x];
+                    OverviewTable += "</td>";
+
 
                     if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Fenster geschlossen: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
                     if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Tür geschlossen: " + CreateTimeString(RoomDoorStateTimeCount[x]);
@@ -592,7 +625,11 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                         };
                     };
 
-                    OverviewTable += "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center; background-color:" + VentWarnColor + ";'>" + RoomOpenWindowCount[x] + "<br>" + RoomOpenDoorCount[x] + "</td>";
+                    OverviewTable += "<td style='border: 1px solid black; padding-left: 10px; padding-right: 10px; font-size:16px; font-weight: bold; text-align:center; background-color:" + VentWarnColor + ";'>";
+                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += RoomOpenWindowCount[x] + "<br>";
+                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += RoomOpenDoorCount[x];
+                    OverviewTable += "</td>";
+
                     OverviewTable += TableSubString[6] + VentWarnColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:bold;'>Raum nicht gelüftet: " + CreateTimeString(RoomStateTimeCount[x]);
                     OverviewTable += "</div></td></tr>";
                 };
@@ -803,7 +840,7 @@ function VentCheck(x) { //Überprüft wie lange Räume geschlossen sind und gibt
 
         if (logging) log("VentMsg=" + VentMsg[x]);
     }
-    else if (RoomOpenWindowCount[x] != 0 || VentWarnTime[x] == 0){
+    else if (RoomOpenWindowCount[x] != 0 || VentWarnTime[x] == 0) {
         if (logging) log("Room " + x + " = " + RoomList[x] + " is open or disabled, no vent warning set");
         CreateRoomsWithVentWarnings(x, "");
         ClearVentTime(x);
