@@ -1,9 +1,9 @@
-const Skriptversion = "1.6.2" //vom 28.6.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.3" //vom 29.6.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster pro Raum und insgesamt zu zählen. Legt pro Raum zwei Datenpunkte an, sowie zwei Datenpunkte fürs gesamte.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
 //WICHTIG!!!
-//Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie die Funktion "Verschluss" für jeden entsprechenden Datenpunkt zugewiesen sein.
+//Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie die Funktion "Fenster" bzw "Tuer" für jeden entsprechenden Datenpunkt.
 
 //Grundeinstellungen
 const logging = true; //Erweiterte Logs ausgeben?
@@ -583,7 +583,7 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
             }
             else { // Geschlossene Räume
 
-                if (VentMsg[x] == "") {
+                if (VentMsg[x] == "") { //geschlossen + keine Lüftungswarnung
                     if (ShowWindowCol) {
                         if (RoomHas[x] == 2 || RoomHas[x] == 3) {        //RoomHas[] 0=Weder Tür noch Fenster, 1=Tür, 2=Fenster, 3=Tür+Fenster
                             OverviewTable += TableSubString[0] + ClosedWindowColor + ";'><img style=' margin: auto; display: block; filter: invert(" + ImgInvert + "); height: 40px;'  src='" + WindowCloseImg + "'></td>";
@@ -605,8 +605,10 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
                     OverviewTable += "</td>";
 
 
-                    if (RoomHas[x] == 2 || RoomHas[x] == 3) OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Fenster geschlossen: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
-                    if (RoomHas[x] == 1 || RoomHas[x] == 3) OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Tür geschlossen: " + CreateTimeString(RoomDoorStateTimeCount[x]);
+                    if (RoomHas[x] == 2 ) OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Fenster geschlossen: " + CreateTimeString(RoomStateTimeCount[x]) + "<br>";
+                    if (RoomHas[x] == 1) OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Tür geschlossen: " + CreateTimeString(RoomDoorStateTimeCount[x]);
+                    if (RoomHas[x] == 3 ) OverviewTable += TableSubString[6] + ClosedWindowColor + ";'>" + ReplaceChars(RoomList[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Fenster geschlossen: " + CreateTimeString(RoomStateTimeCount[x]) + "<br><div style='font-size:12px; font-weight:normal;'>Tür geschlossen: " + CreateTimeString(RoomDoorStateTimeCount[x]);
+                    
                     OverviewTable += "</div></td></tr>"
                 }
                 else { //geschlossen + Lüftungswarnung

@@ -73,6 +73,8 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 29.06.20 (V1.6.3)
+- Fix: Problem mit zusätzlicher Tabellenspalte behoben wenn sowohl Fenster als auch Türsensoren vorhanden waren und beides geschlossen.
 #### 24.06.20 (V1.6.2)
 - Change: Tabellendetails hinzugefügt/geändert.
 - Change: Zahlenspalte angepasst.
