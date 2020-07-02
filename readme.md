@@ -70,9 +70,14 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 
 ![fensteroffentut2c.png](/admin/fensteroffentut2c.png)  
 
-All diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
+Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 02.07.20 (V1.6.4)
+- Fix: Problem bei HM Instanzen ungleich 0 behoben.
+- Fix: Fehlende Implementierung von NoMsgAtPresence behoben.
+- Change: Layout der ersten Tabellenspalte geändert. Wenn ein Raum nur Fenster oder Tür -> eine Spalte. Wenn Raum Fenster und Tür -> zwei Spalten.
+- Add: Türen können nun auch "gekippt" Status haben.
 #### 29.06.20 (V1.6.3)
 - Fix: Problem mit zusätzlicher Tabellenspalte behoben wenn sowohl Fenster als auch Türsensoren vorhanden waren und beides geschlossen.
 #### 24.06.20 (V1.6.2)
