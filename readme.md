@@ -1,5 +1,9 @@
-## (Version 1.6.0)
+## (Version 1.6.4)
 ## Script um offene Türen und Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle und/oder Alexa/Telegram/Mail. Flexibel konfigurierbar.
+
+**If you like it, please consider a donation:**
+                                                                          
+[![paypal](https://www.paypalobjects.com/en_US/DK/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=GGF786JBJNYRN&source=url) 
 
 ### Features
 - #### Kann beliebige Tür/Fenster Kontakte verwenden. Noch nicht erfasste Varianten können über die Einstellungen hinzugefügt werden.
@@ -21,6 +25,9 @@
 ### **<span style="color:red">Aber nur für den Datenpunkt, nicht den gesamten Channel!!!</span>**  
 
 ![fensteroffentut1.jpg](/admin/fensteroffentut1.jpg) 
+
+
+
 
 # Installation
 1. Wenn noch nicht geschehen, allen gewünschten Sensoren einen Raum und eine Funktion zuweisen. Die Funktion muss vorher in den Aufzählungen hinzugefügt werden und könnte z.B. "Fenster", bzw. "Tuer" lauten. Sollen andere Begriffe verwendet werden, muss dies dann auch im Script, Zeile 12 und 13 geändert werden. **Nach der Zuweisung, bzw. dem anlegen neuer Aufzählungspunkte ist es empfehlenswert die JS Instanz neu zu starten da diese bei Aufzählungsänderungen gerne mal "zickt" was dann zu Skriptfehlern führt**.
@@ -73,6 +80,8 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 04.07.20 (V1.6.5)
+- Add: Türenbenachrichtigung hinzugefügt.
 #### 02.07.20 (V1.6.4)
 - Fix: Problem bei HM Instanzen ungleich 0 behoben.
 - Fix: Fehlende Implementierung von NoMsgAtPresence behoben.

@@ -1,4 +1,4 @@
-const Skriptversion = "1.6.4" //vom 02.07.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.5" //vom 05.07.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster/Türen pro Raum und insgesamt zu zählen.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -16,7 +16,7 @@ const DoorIgnoreTime = 1000; // 1000 ms = 1 Sekunden - Zeit in ms für die kurzz
 
 
 //Nachrichteneinstellungen
-const ZeitBisNachricht = 900000 // 300000 ms = 5 Minuten - Zyklus- bzw. Ablaufzeit für Fensteroffenwarnung/en
+const TimeToMsg = 900000 // 300000 ms = 5 Minuten - Zyklus- bzw. Ablaufzeit für Tür/Fenster-offenwarnung/en
 const MaxMessages = 1; //Maximale Anzahl der Nachrichten pro Raum 
 
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
@@ -58,6 +58,7 @@ const SendVentMsg = [];
 const SendDoorOpenCloseMsg = [];
 const SendWindowOpenCloseMsg = [];
 const SendWindowWarnMsg = [];
+const SendDoorWarnMsg = [];
 
 const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
 
@@ -75,7 +76,8 @@ const RoomOpenDoorCount = [];  // Array für Zähler offene Türen pro Raum
 const RoomTiltedDoorCount = [];  // Array für Zähler gekippte Türen pro Raum
 const RoomOpenWindowCount = []; // Array für Zähler offene Fenster pro Raum
 const RoomTiltedWindowCount = []; // Array für Zähler gekippte Fenster pro Raum
-const RoomMsgCount = []; //Zähler für bereits ausgegebene Warnmeldungen
+const RoomWindowMsgCount = []; //Zähler für bereits ausgegebene Fenster Warnmeldungen
+const RoomDoorMsgCount = []; //Zähler für bereits ausgegebene Tür Warnmeldungen
 let RoomHas = [] // 0=Weder Tür noch Fenster, 1 Tür, 2 Fenster, 3 Tür und Fenster
 const RoomsWithCombinedOpenings = [];
 let RoomsWithOpenings = ""; // Kombinierte Liste mit offenen Türen und Fenstern
@@ -86,7 +88,8 @@ let RoomsWithTiltedWindows = ""; //Liste der Räume mit gekippten Fenstern
 let RoomsWithVentWarnings = []; //Räume mit Lüftungswarnung
 let RoomListOrderPriority = ""; //Sortierreihenfolge der Raumliste
 
-const OpenWindowMsgHandler = []; // Objektarray für timeouts pro Raum
+const OpenWindowMsgHandler = []; // Objektarray für timeouts pro Raum/Fenster
+const OpenDoorMsgHandler = []; // Objektarray für timeouts pro Raum/Tür
 const IgnoreValue = []; //Vergleichswert für IgnoreTimeout
 const VentMsgHandler = []; //Timeout/Intervall Objekt
 const VentMsg = []; //Lüftungsnachricht
@@ -94,9 +97,10 @@ const Sensor = []; //Sensoren als Array anlegen
 let SensorType = []; //Unterscheidung zwischen Tür und Fenstersensor
 const SensorVal = [];//Sensorwerte als Array anlegen
 const SensorOldVal = []; //Alte Sensorwerte als Array ablegen
-const Laufzeit = []; //Timer Laufzeit pro Fenster
-let RoomList = []; // Raumlisten Array
+const WindowWarnRuntime = []; //Timer WindowWarnRuntime pro Fenster
+const DoorWarnRuntime = []; //Timer DoorWarnRuntime pro Tür
 const VentWarnTime = []; // Array mit Zeiten nach dem eine Lüftungsempfehlung ausgegeben wird
+let RoomList = []; // Raumlisten Array
 const RoomStateTimeStamp = []; //Letzte Änderung des Fenster-Raumstatus
 const RoomStateTimeCount = []; // Zeitspanne seit letzter Änderung
 const RoomDoorStateTimeStamp = []; //Letzte Änderung des Tür-Raumstatus
@@ -149,7 +153,9 @@ for (let x in Funktionen) {        // loop ueber alle Functions
                     DpCount++;
                     States[DpCount] = { id: praefix + room + ".SendWindowOpenCloseMsg", initial: true, forceCreation: false, common: { read: true, write: true, name: "Sollen für diesen Raum Nachrichten bei öffnen/schliessen von Fenstern ausgegeben werden?", type: "boolean", role: "state", def: true } }; //
                     DpCount++;
-                    States[DpCount] = { id: praefix + room + ".SendWindowWarnMsg", initial: true, forceCreation: false, common: { read: true, write: true, name: "Sollen für diesen Raum Nachrichten für überschrittene Öffnungszeit ausgegeben werden?", type: "boolean", role: "state", def: true } }; //
+                    States[DpCount] = { id: praefix + room + ".SendWindowWarnMsg", initial: true, forceCreation: false, common: { read: true, write: true, name: "Sollen für diesen Raum Nachrichten für überschrittene Fenster Öffnungszeit ausgegeben werden?", type: "boolean", role: "state", def: true } }; //
+                    DpCount++;
+                    States[DpCount] = { id: praefix + room + ".SendDoorWarnMsg", initial: true, forceCreation: false, common: { read: true, write: true, name: "Sollen für diesen Raum Nachrichten für überschrittene Tür Öffnungszeit ausgegeben werden?", type: "boolean", role: "state", def: true } }; //
                     DpCount++;
                     States[DpCount] = { id: praefix + room + ".WindowIsOpen", initial: false, forceCreation: false, common: { read: true, write: false, name: "Fenster im Raum offen oder gekippt?", type: "boolean", role: "state", def: false } }; //
                     DpCount++;
@@ -166,8 +172,10 @@ for (let x in Funktionen) {        // loop ueber alle Functions
                     RoomTiltedDoorCount[z] = 0; // Array mit 0 initialisieren
                     RoomOpenWindowCount[z] = 0; // Array mit 0 initialisieren
                     RoomTiltedWindowCount[z] = 0; // Array mit 0 initialisieren
-                    RoomMsgCount[z] = 0;
-                    Laufzeit[z] = 0; // Array mit 0 initialisieren
+                    RoomWindowMsgCount[z] = 0;
+                    RoomDoorMsgCount[z] = 0;
+                    WindowWarnRuntime[z] = 0; // Array mit 0 initialisieren
+                    DoorWarnRuntime[z] = 0; // Array mit 0 initialisieren
                     RoomsWithCombinedOpenings[z] = []; //Zweite Dimension für jeden Raum initialisieren
                     z++;
                 };
@@ -292,7 +300,8 @@ function init() {
         SendDoorOpenCloseMsg[x] = getState(praefix + RoomList[x] + ".SendDoorOpenCloseMsg").val;
         SendWindowOpenCloseMsg[x] = getState(praefix + RoomList[x] + ".SendWindowOpenCloseMsg").val;
         SendWindowWarnMsg[x] = getState(praefix + RoomList[x] + ".SendWindowWarnMsg").val;
-        if (logging) log("x=" + x + "=" + RoomList[x] + " SendWindowWarnMsg=" + SendWindowWarnMsg[x] + " SendVentMsg=" + SendVentMsg[x] + " SendWindowOpenCloseMsg=" + SendWindowOpenCloseMsg[x] + " SendDoorOpenCloseMsg=" + SendDoorOpenCloseMsg[x]);
+        SendDoorWarnMsg[x] = getState(praefix + RoomList[x] + ".SendDoorWarnMsg").val;
+        if (logging) log("x=" + x + "=" + RoomList[x] + " SendWindowWarnMsg=" + SendWindowWarnMsg[x] + " SendDoorWarnMsg=" + SendDoorWarnMsg[x] + " SendVentMsg=" + SendVentMsg[x] + " SendWindowOpenCloseMsg=" + SendWindowOpenCloseMsg[x] + " SendDoorOpenCloseMsg=" + SendDoorOpenCloseMsg[x]);
     };
 
     for (let x = 0; x < Sensor.length; x++) { //Sensor Dps einlesen
@@ -965,14 +974,14 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
 
             if (RoomOpenWindowCount[TempRoomIndex] == 1) {
                 log("SendWindowWarnMsg=" + SendWindowWarnMsg[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
-                Laufzeit[TempRoomIndex] = 0;
+                WindowWarnRuntime[TempRoomIndex] = 0;
                 if (SendWindowWarnMsg[TempRoomIndex]) {
                     if (logging) log("Setting Interval to Room:" + TempRoom);
                     OpenWindowMsgHandler[TempRoomIndex] = setInterval(function () {// Interval starten und Dauer bei Ansage aufaddieren
-                        Laufzeit[TempRoomIndex] = Laufzeit[TempRoomIndex] + ZeitBisNachricht;
-                        if (RoomMsgCount[TempRoomIndex] <= MaxMessages - 1) Meldung(ReplaceChars(TempRoom) + "fenster seit " + CreateTimeString(CalcTimeDiff("now", RoomStateTimeStamp[TempRoomIndex])) + " geöffnet!");
-                        RoomMsgCount[TempRoomIndex]++;
-                    }, ZeitBisNachricht);
+                        WindowWarnRuntime[TempRoomIndex] = WindowWarnRuntime[TempRoomIndex] + TimeToMsg;
+                        if (RoomWindowMsgCount[TempRoomIndex] <= MaxMessages - 1) Meldung(ReplaceChars(TempRoom) + "fenster seit " + CreateTimeString(CalcTimeDiff("now", RoomStateTimeStamp[TempRoomIndex])) + " geöffnet!");
+                        RoomWindowMsgCount[TempRoomIndex]++;
+                    }, TimeToMsg);
                 };
             };
         } else if (SensorType[x] == "Door") {
@@ -1000,6 +1009,20 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
                     if (UseEventLog) WriteEventLog(ReplaceChars(TempRoom) + " Tür gekippt!");
                 };
             };
+
+            if (RoomOpenDoorCount[TempRoomIndex] == 1) {
+                log("SendDoorWarnMsg=" + SendDoorWarnMsg[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
+                DoorWarnRuntime[TempRoomIndex] = 0;
+                if (SendDoorWarnMsg[TempRoomIndex]) {
+                    if (logging) log("Setting Interval to Room:" + TempRoom);
+                    OpenDoorMsgHandler[TempRoomIndex] = setInterval(function () {// Interval starten und Dauer bei Ansage aufaddieren
+                        DoorWarnRuntime[TempRoomIndex] = DoorWarnRuntime[TempRoomIndex] + TimeToMsg;
+                        if (RoomDoorMsgCount[TempRoomIndex] <= MaxMessages - 1) Meldung(ReplaceChars(TempRoom) + "tür seit " + CreateTimeString(CalcTimeDiff("now", RoomDoorStateTimeStamp[TempRoomIndex])) + " geöffnet!");
+                        RoomDoorMsgCount[TempRoomIndex]++;
+                    }, TimeToMsg);
+                };
+            };
+
         }
     }
     else if (SensorVal[x] == "closed") {
@@ -1033,11 +1056,12 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
 
         if (RoomOpenWindowCount[TempRoomIndex] == 0) { //Wenn alle Fenster im Raum geschlossen, Dp aktualisieren und Intervall/Timeout löschen
             setState(praefix + TempRoom + ".WindowIsOpen", false);
-            ClearWarnTime(TempRoomIndex);
+            ClearWindowWarnTime(TempRoomIndex);
         };
 
         if (RoomOpenDoorCount[TempRoomIndex] == 0) { //Wenn alle Türen im Raum geschlossen, Dp aktualisieren
             setState(praefix + TempRoom + ".DoorIsOpen", false);
+            ClearDoorWarnTime(TempRoomIndex);
         };
 
         if (RoomOpenDoorCount[TempRoomIndex] == 0 && RoomOpenWindowCount[TempRoomIndex] == 0) { //Wenn alle Türen und Fenster im Raum geschlossen, Dp aktualisieren
@@ -1267,13 +1291,23 @@ function ClearVentTime(x) {
     };
 }
 
-function ClearWarnTime(x) {
-    if (logging) log("reaching ClearWarnTime - [x] = " + [x]);
+function ClearWindowWarnTime(x) {
+    if (logging) log("reaching ClearWindowWarnTime - [x] = " + [x]);
 
     if (typeof (OpenWindowMsgHandler[x]) == "object") { //Wenn ein Interval gesetzt ist, löschen
         if (logging) log("Clearing Interval for " + x)
         clearInterval(OpenWindowMsgHandler[x]); //
-        RoomMsgCount[x] = 0; //Nachrichtenzähler wieder resetten
+        RoomWindowMsgCount[x] = 0; //Nachrichtenzähler wieder resetten
+    };
+}
+
+function ClearDoorWarnTime(x) {
+    if (logging) log("reaching ClearDoorWarnTime - [x] = " + [x]);
+
+    if (typeof (OpenDoorMsgHandler[x]) == "object") { //Wenn ein Interval gesetzt ist, löschen
+        if (logging) log("Clearing Door Interval for " + x)
+        clearInterval(OpenDoorMsgHandler[x]); //
+        RoomDoorMsgCount[x] = 0; //Nachrichtenzähler wieder resetten
     };
 }
 
@@ -1345,8 +1379,13 @@ function CreateTrigger() {
         });
         on(praefix + RoomList[x] + ".SendWindowWarnMsg", function (dp) { //Trigger
             SendWindowWarnMsg[x] = dp.state.val;
-            ClearWarnTime(x);
+            ClearWindowWarnTime(x);
         });
+        on(praefix + RoomList[x] + ".SendDoorWarnMsg", function (dp) { //Trigger
+            SendDoorWarnMsg[x] = dp.state.val;
+            ClearWindowWarnTime(x);
+        });
+
     };
 
 
@@ -1363,7 +1402,7 @@ function CreateTrigger() {
     onStop(function () { //Bei Scriptende alle Timer löschen
         for (let x = 0; x < RoomList.length; x++) {
             ClearVentTime(x);
-            ClearWarnTime(x)
+            ClearWindowWarnTime(x)
         };
     }, 100);
 }
