@@ -1,4 +1,4 @@
-## (Version 1.6.4)
+## (Version 1.6.6)
 ## Script um offene Türen und Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle und/oder Alexa/Telegram/Mail. Flexibel konfigurierbar.
 
 **If you like it, please consider a donation:**
@@ -80,6 +80,8 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 
 # Changelog
+#### 29.07.20 (V1.6.6)
+- Fix: Dp "RoomIsOpen" wird nun korrekt gesetzt.
 #### 04.07.20 (V1.6.5)
 - Add: Türenbenachrichtigung hinzugefügt.
 #### 02.07.20 (V1.6.4)
