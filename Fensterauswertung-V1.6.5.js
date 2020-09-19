@@ -1,4 +1,4 @@
-const Skriptversion = "1.6.5" //vom 05.07.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.6" //vom 28.07.2020 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster/Türen pro Raum und insgesamt zu zählen.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -23,8 +23,8 @@ const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
 const AlexaId = ""; // Die Alexa Seriennummer.
 const UseMail = false; //Nachricht via Mail versenden?
-const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
-const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
+const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
+const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
 const NoMsgAtPresence = false; //Sollen Nachrichten bei Anwesenheit unterdrückt werden?
 
 //Tabelleneinstellungen
@@ -333,9 +333,12 @@ function main() {
 }
 
 function Meldung(msg) {
-    if (logging) log("Reaching Meldung, msg= " + msg);
+    if (logging) log("Reaching Meldung, msg= " + msg + " NoMsgAtPresence= " + NoMsgAtPresence + " Presence= " + Presence);
 
-    if (!NoMsgAtPresence) {
+    if (NoMsgAtPresence && Presence) {
+        if (logging) log("Meldung blocked cause, NoMsgAtPresence= " + NoMsgAtPresence + " Presence= " + Presence);
+    }
+    else {
         if (MuteMode != 1 && MuteMode != 2) {
             if (UseSay) Say(msg);
 
@@ -1083,7 +1086,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
             TiltedWindowCount--; //Gekippte Fenster Zähler erniedrigen
             RoomTiltedWindowCount[TempRoomIndex]--;
             if (TiltedWindowCount < 0) TiltedWindowCount = 0;
-            if (RoomTiltedWindowCount[x] < 0) RoomTiltedWindowCount[x] = 0;
+            if (RoomTiltedWindowCount[TempRoomIndex] < 0) RoomTiltedWindowCount[TempRoomIndex] = 0;
 
             setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
             if (logging) log("TiltedWindowCount=" + TiltedWindowCount + " RoomTiltedWindowCount=" + RoomTiltedWindowCount[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
@@ -1093,7 +1096,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
             setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
         };
 
-        if (RoomOpenWindowCount[x] == 0 && RoomOpenDoorCount[x] == 0) {
+        if (RoomOpenWindowCount[TempRoomIndex] == 0 && RoomOpenDoorCount[TempRoomIndex] == 0) {
             setState(praefix + TempRoom + ".RoomIsOpen", false);
         }
         else {
@@ -1126,7 +1129,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
             setState(praefix + TempRoom + ".RoomTiltedDoorCount", RoomTiltedDoorCount[TempRoomIndex]);
         };
 
-        if (RoomOpenWindowCount[x] == 0 && RoomOpenDoorCount[x] == 0) {
+        if (RoomOpenWindowCount[TempRoomIndex] == 0 && RoomOpenDoorCount[TempRoomIndex] == 0) {
             setState(praefix + TempRoom + ".RoomIsOpen", false);
         }
         else {
@@ -1393,8 +1396,8 @@ function CreateTrigger() {
         MuteMode = dp.state.val;
     });
 
-    if (PresenceDp != "") { //Trigger für Anwesenheitsdatenpunkt erzeugen wenn vorhanden
-        on("PresenceDp", function (dp) { //Trigger für MuteMode erzeugen
+    if (PresenceDp != "") { //Trigger fürPresenceDp erzeugen wenn vorhanden
+        on("PresenceDp", function (dp) { //Trigger für Presence erzeugen
             Presence = dp.state.val;
         });
     }
