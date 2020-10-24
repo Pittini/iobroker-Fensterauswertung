@@ -1,4 +1,4 @@
-## (Version 1.6.6)
+## (Version 1.6.7)
 ## Script um offene Türen und Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle und/oder Alexa/Telegram/Mail. Flexibel konfigurierbar.
 
 **If you like it, please consider a donation:**
@@ -21,10 +21,10 @@
 - #### Kann kurze auf/zu Änderungen innerhalb Zeit x (einstellbar) ignorieren.
 
 # WICHTIG!!!
-### Vorraussetzungen: Den Geräten müssen Räume zugewiesen sein, sowie eine Funktion, z.B. "Fenster", bzw. "Tuer" für jeden entsprechenden Datenpunkt.  
-### **<span style="color:red">Aber nur für den Datenpunkt, nicht den gesamten Channel!!!</span>**  
+### Vorraussetzungen: Den Geräten müssen Räume (für den gesamten Channel) zugewiesen sein, sowie eine Funktion, z.B. "Fenster", bzw. "Tuer" für jeden entsprechenden Datenpunkt.  
+### **<span style="color:red">Hier aber nur für den Datenpunkt, nicht den gesamten Channel!!!</span>**  
 
-![fensteroffentut1.jpg](/admin/fensteroffentut1.jpg) 
+![fensteroffentut1a.jpg](/admin/fensteroffentut1a.jpg) 
 
 
 
