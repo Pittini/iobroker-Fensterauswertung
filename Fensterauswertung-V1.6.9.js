@@ -376,7 +376,7 @@ function Meldung(msg) {
 
             if (UsePushover) {
                 sendTo("pushover", "send", {
-                    device: PushoverDevice, message: msg, title: "Fensterüberwachung", sound: ""
+                    device: PushoverDevice, message: msg, title: PushOverTitle, sound: ""
                 });
             };
 
