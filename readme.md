@@ -1,4 +1,4 @@
-## (Version 1.6.7)
+## (Version 1.6.9)
 ## Script um offene Türen und Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle und/oder Alexa/Telegram/Mail. Flexibel konfigurierbar.
 
 **If you like it, please consider a donation:**
@@ -79,9 +79,10 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 
 Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 # Changelog
+#### 11.02.21 (V1.6.9)
+- Add: Alexa Lautstärke und Instanz nun einstellbar
 #### 08.02.21 (V1.6.8)
-- Add: PushOver Option zu Nachrichten hinzugefügt. (https://github.com/Pittini/iobroker-Fensterauswertung/issues/28
-)
+- Add: PushOver Option zu Nachrichten hinzugefügt. (https://github.com/Pittini/iobroker-Fensterauswertung/issues/28)
 #### 15.10.20 (V1.6.7)
 - Add: Zeit bis Benachrichtigung kann nun für Fenster und Türen separat gesetzt werden.
 #### 29.07.20 (V1.6.6)
