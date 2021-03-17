@@ -79,8 +79,10 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 
 Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 # Changelog
+#### 11.02.21 (V1.6.10)
+- Fix: Fehler im Trigger des AnwesenheitsDp korrigiert.
 #### 11.02.21 (V1.6.9)
-- Add: Alexa Lautstärke und Instanz nun einstellbar
+- Add: Alexa Lautstärke und Instanz nun einstellbar.
 #### 08.02.21 (V1.6.8)
 - Add: PushOver Option zu Nachrichten hinzugefügt. (https://github.com/Pittini/iobroker-Fensterauswertung/issues/28)
 #### 15.10.20 (V1.6.7)
