@@ -79,7 +79,9 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 
 Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 # Changelog
-#### 11.02.21 (V1.6.10)
+#### 18.03.21 (V1.6.11)
+- Fix: Anzeigefehler für Pluralvariante von RoomsWithOpenings behoben.
+#### 16.03.21 (V1.6.10)
 - Fix: Fehler im Trigger des AnwesenheitsDp korrigiert.
 #### 11.02.21 (V1.6.9)
 - Add: Alexa Lautstärke und Instanz nun einstellbar.
