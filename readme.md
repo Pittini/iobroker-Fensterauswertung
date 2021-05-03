@@ -1,4 +1,4 @@
-## (Version 1.6.9)
+## (Version 1.6.12)
 ## Script um offene Türen und Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle und/oder Alexa/Telegram/Mail. Flexibel konfigurierbar.
 
 **If you like it, please consider a donation:**
@@ -79,6 +79,8 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 
 Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 # Changelog
+#### 03.05.21 (1.6.12)
+* Fix: Fehlermeldung "Read-only state ... has been written without ack-flag with value ..." nach update des Js Controller auf Version 3.3.x oder höher behoben. Issue: https://github.com/Pittini/iobroker-Fensterauswertung/issues/34
 #### 18.03.21 (V1.6.11)
 - Fix: Anzeigefehler für Pluralvariante von RoomsWithOpenings behoben.
 #### 16.03.21 (V1.6.10)
