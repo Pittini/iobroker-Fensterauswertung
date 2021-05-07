@@ -416,7 +416,7 @@ function WriteMessageLog(msg) {
     };
     // log("TempMessageLog=" + TempMessageLog + " Logentrys=" + LogEntrys);
     MessageLog = TempMessageLog.join(LogEntrySeparator); //Array zu String wandeln und Separator anhängen
-    setState(praefix + "MessageLog", MessageLog,true); //Logstring schreiben
+    setState(praefix + "MessageLog", MessageLog, true); //Logstring schreiben
 }
 
 function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML Tabelle   
