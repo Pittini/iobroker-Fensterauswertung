@@ -1,4 +1,4 @@
-const Skriptversion = "1.6.11" //vom 18.03.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.13" //vom 29.06.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster/Türen pro Raum und insgesamt zu zählen.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -26,9 +26,10 @@ const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 
 //Pushover
 const UsePushover = false; // Sollen Nachrichten via PushOver gesendet werden?
-const PushoverInstance = "pushover.0"; //Pushoverinstanz welche genutzt werden soll angeben
-const PushoverDevice = "All"; //Welches Gerät soll die Nachricht bekommen
+const PushOverInstance = "pushover.0"; //Pushoverinstanz welche genutzt werden soll angeben
+const PushOverDevice = "All"; //Welches Gerät soll die Nachricht bekommen
 const PushOverTitle = "Fensterüberwachung";
+const PushOverSound = "none"; //Welcher Sound soll abgespielt werden? "none" für kein Sound, "" für Standartsound, ansonsten Namen angeben z.B. "magic"
 
 //Alexa
 const UseAlexa = false; // Sollen Nachrichten via Alexa ausgegeben werden?
@@ -139,7 +140,7 @@ for (let x in Funktionen) {        // loop ueber alle Functions
 
     let Funktion = Funktionen[x].name;
     if (typeof Funktion == "undefined") {
-        log("Keine Funktion gefunden");
+        log("Keine Funktion gefunden", "error");
     }
     else {
         if (typeof Funktion == 'object') Funktion = Funktion.de;
@@ -376,8 +377,8 @@ function Meldung(msg) {
             };
 
             if (UsePushover) {
-                sendTo("pushover", "send", {
-                    device: PushoverDevice, message: msg, title: PushOverTitle, sound: ""
+                sendTo(PushOverInstance, "send", {
+                    device: PushOverDevice, message: msg, title: PushOverTitle, sound: PushOverSound
                 });
             };
 
@@ -387,7 +388,7 @@ function Meldung(msg) {
                 });
             };
         }
-        setState(praefix + "LastMessage", msg);
+        setState(praefix + "LastMessage", msg, true);
         WriteMessageLog(msg);
     };
 }
@@ -414,9 +415,9 @@ function WriteMessageLog(msg) {
         TempMessageLog.splice(MaxLogEntrys - LogEntrys); //Vom Ende des Arrays benötigte Anzahl Einträge löschen. Berücksichtig auch Einstellungsänderung auf niedrigere Zahl.
         LogEntrys = TempMessageLog.length;
     };
-    log("TempMessageLog=" + TempMessageLog + " Logentrys=" + LogEntrys);
+    // log("TempMessageLog=" + TempMessageLog + " Logentrys=" + LogEntrys);
     MessageLog = TempMessageLog.join(LogEntrySeparator); //Array zu String wandeln und Separator anhängen
-    setState(praefix + "MessageLog", MessageLog); //Logstring schreiben
+    setState(praefix + "MessageLog", MessageLog,true); //Logstring schreiben
 }
 
 function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML Tabelle   
@@ -718,7 +719,7 @@ function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML T
         };
         OverviewTable += "</tbody></table>";
     };
-    setState(praefix + "OverviewTable", OverviewTable);
+    setState(praefix + "OverviewTable", OverviewTable, true);
 }
 
 function CalcTimeDiff(time1, time2) {
@@ -792,7 +793,7 @@ function CreateRoomsWithOpenWindowsList() { //Erzeugt Textliste mit Räumen welc
         RoomsWithOpenWindows = "Alle Fenster sind geschlossen";
 
     };
-    setState(praefix + "RoomsWithOpenWindows", RoomsWithOpenWindows);
+    setState(praefix + "RoomsWithOpenWindows", RoomsWithOpenWindows, true);
     if (logging) log("RoomsWithOpenWindows: " + RoomsWithOpenWindows);
 }
 
@@ -814,7 +815,7 @@ function CreateRoomsWithTiltedWindowsList() { //Erzeugt Textliste mit Räumen we
     if (RoomsWithTiltedWindows == "") {
         RoomsWithTiltedWindows = "Keine Fenster gekippt";
     };
-    setState(praefix + "RoomsWithTiltedWindows", RoomsWithTiltedWindows);
+    setState(praefix + "RoomsWithTiltedWindows", RoomsWithTiltedWindows, true);
     if (logging) log("RoomsWithTiltedWindows: " + RoomsWithTiltedWindows);
 }
 
@@ -844,7 +845,7 @@ function CreateRoomsWithOpenDoorsList() { //Erzeugt Textliste mit Räumen welche
     if (RoomsWithOpenDoors == "") {
         RoomsWithOpenDoors = "Keine Tür/en geöffnet";
     };
-    setState(praefix + "RoomsWithOpenDoors", RoomsWithOpenDoors);
+    setState(praefix + "RoomsWithOpenDoors", RoomsWithOpenDoors, true);
     if (logging) log("RoomsWithOpenDoors: " + RoomsWithOpenDoors);
 }
 
@@ -866,7 +867,7 @@ function CreateRoomsWithTiltedDoorsList() { //Erzeugt Textliste mit Räumen welc
     if (RoomsWithTiltedDoors == "") {
         RoomsWithTiltedDoors = "Keine Tür gekippt";
     };
-    setState(praefix + "RoomsWithTiltedDoors", RoomsWithTiltedDoors);
+    setState(praefix + "RoomsWithTiltedDoors", RoomsWithTiltedDoors, true);
     if (logging) log("RoomsWithTiltedDoors: " + RoomsWithTiltedDoors);
 }
 
@@ -884,7 +885,7 @@ function CreateRoomsWithOpeningsList() { //Erzeugt Textliste mit Räumen welche 
             RoomsWithOpenings += ReplaceChars(RoomList[x]) + " " + RoomsWithCombinedOpenings[x].join(", ") + OpenWindowListSeparator;
         }
     };
-    setState(praefix + "RoomsWithOpenings", RoomsWithOpenings);
+    setState(praefix + "RoomsWithOpenings", RoomsWithOpenings, true);
     if (logging) log("RoomsWithOpenings: " + RoomsWithOpenings);
 }
 
@@ -898,7 +899,7 @@ function CreateRoomsWithVentWarnings(x, Warning) { //Erzeugt Liste mit Räumen f
             Tempstring += RoomList[y] + " nicht gelüftet seit: " + RoomsWithVentWarnings[y] + OpenWindowListSeparator;
     };
     Tempstring = Tempstring.substr(0, Tempstring.length - OpenWindowListSeparator.length);
-    setState(praefix + "RoomsWithVentWarnings", Tempstring);
+    setState(praefix + "RoomsWithVentWarnings", Tempstring, true);
 }
 
 function VentCheck(x) { //Überprüft wie lange Räume geschlossen sind und gibt Lüftungswarnung aus
@@ -968,14 +969,14 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
     if (((SensorVal[x] == "open") && (SensorOldVal[x] == "closed" || SensorOldVal[x] == "" || SensorOldVal[x] != "tilted")) || ((SensorVal[x] == "tilted") && (SensorOldVal[x] == "closed" || SensorOldVal[x] == "" || SensorOldVal[x] != "open"))) { //Fenster war geschlossen und wurde geöffnet oder gekippt - Wechsel von open auf tilted nicht berücksichtigt!!!
 
         if (SensorType[x] == "Window") {
-            if (RoomOpenWindowCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".WindowIsOpen", true);
-            if (RoomOpenWindowCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".RoomIsOpen", true);
+            if (RoomOpenWindowCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".WindowIsOpen", true, true);
+            if (RoomOpenWindowCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".RoomIsOpen", true, true);
 
             OpenWindowCount++; //Gesamtfensterzähler erhöhen
             RoomOpenWindowCount[TempRoomIndex]++; //Raumfensterzähler erhöhen
 
             if (logging) log("RoomOpenWindowCount für " + TempRoom + "=" + RoomOpenWindowCount[TempRoomIndex]);
-            setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex], true);
 
             if (!IsInit) {
                 if (RoomOpenWindowCount[TempRoomIndex] == 1) {
@@ -1008,14 +1009,14 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
                 };
             };
         } else if (SensorType[x] == "Door") {
-            if (RoomOpenDoorCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".DoorIsOpen", true);
-            if (RoomOpenDoorCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".RoomIsOpen", true);
+            if (RoomOpenDoorCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".DoorIsOpen", true, true);
+            if (RoomOpenDoorCount[TempRoomIndex] == 0) setState(praefix + TempRoom + ".RoomIsOpen", true, true);
 
             OpenDoorCount++; //Gesamttürzähler erhöhen
             RoomOpenDoorCount[TempRoomIndex]++; //Raumtürzähler erhöhen
 
             if (logging) log("RoomOpenDoorCount für " + TempRoom + "=" + RoomOpenDoorCount[TempRoomIndex]);
-            setState(praefix + TempRoom + ".RoomOpenDoorCount", RoomOpenDoorCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomOpenDoorCount", RoomOpenDoorCount[TempRoomIndex], true);
 
             if (!IsInit) {
                 if (RoomOpenDoorCount[TempRoomIndex] == 1) {
@@ -1060,7 +1061,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
                     if (UseEventLog) WriteEventLog(ReplaceChars(TempRoom) + " Fenster geschlossen!");
                 };
             };
-            setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomOpenWindowCount", RoomOpenWindowCount[TempRoomIndex], true);
         }
         else if (SensorType[x] == "Door") {
             if (!IsInit) { // Wenn nicht in Initialisierungsphase (Skriptstart)
@@ -1074,21 +1075,21 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
                 };
             };
             if (logging) log("RoomOpenDoorCount[TempRoomIndex]=" + RoomOpenDoorCount[TempRoomIndex] + " TempRoom=" + TempRoom + " TempRoomIndex=" + TempRoomIndex)
-            setState(praefix + TempRoom + ".RoomOpenDoorCount", RoomOpenDoorCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomOpenDoorCount", RoomOpenDoorCount[TempRoomIndex], true);
         };
 
         if (RoomOpenWindowCount[TempRoomIndex] == 0) { //Wenn alle Fenster im Raum geschlossen, Dp aktualisieren und Intervall/Timeout löschen
-            setState(praefix + TempRoom + ".WindowIsOpen", false);
+            setState(praefix + TempRoom + ".WindowIsOpen", false, true);
             ClearWindowWarnTime(TempRoomIndex);
         };
 
         if (RoomOpenDoorCount[TempRoomIndex] == 0) { //Wenn alle Türen im Raum geschlossen, Dp aktualisieren
-            setState(praefix + TempRoom + ".DoorIsOpen", false);
+            setState(praefix + TempRoom + ".DoorIsOpen", false, true);
             ClearDoorWarnTime(TempRoomIndex);
         };
 
         if (RoomOpenDoorCount[TempRoomIndex] == 0 && RoomOpenWindowCount[TempRoomIndex] == 0) { //Wenn alle Türen und Fenster im Raum geschlossen, Dp aktualisieren
-            setState(praefix + TempRoom + ".RoomIsOpen", false);
+            setState(praefix + TempRoom + ".RoomIsOpen", false, true);
         };
     };
 
@@ -1098,7 +1099,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
             if (logging) log("Reaching tilted+ in checkWindow");
             TiltedWindowCount++; //Gekippte Fenster Zähler erhöhen
             RoomTiltedWindowCount[TempRoomIndex]++;
-            setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex], true);
             if (logging) log("TiltedWindowCount=" + TiltedWindowCount + " RoomTiltedWindowCount=" + RoomTiltedWindowCount[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
         }
         else if ((SensorVal[x] != "tilted" && SensorOldVal[x] == "tilted") && IsInit == false) { //Bei Wechsel von gekippt auf offen oder geschlossen und keine Initphase
@@ -1108,19 +1109,19 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
             if (TiltedWindowCount < 0) TiltedWindowCount = 0;
             if (RoomTiltedWindowCount[TempRoomIndex] < 0) RoomTiltedWindowCount[TempRoomIndex] = 0;
 
-            setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex], true);
             if (logging) log("TiltedWindowCount=" + TiltedWindowCount + " RoomTiltedWindowCount=" + RoomTiltedWindowCount[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
         };
 
         if (IsInit && RoomTiltedWindowCount[TempRoomIndex] == 0) {
-            setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomTiltedWindowCount", RoomTiltedWindowCount[TempRoomIndex], true);
         };
 
         if (RoomOpenWindowCount[TempRoomIndex] == 0 && RoomOpenDoorCount[TempRoomIndex] == 0) {
-            setState(praefix + TempRoom + ".RoomIsOpen", false);
+            setState(praefix + TempRoom + ".RoomIsOpen", false, true);
         }
         else {
-            setState(praefix + TempRoom + ".RoomIsOpen", true);
+            setState(praefix + TempRoom + ".RoomIsOpen", true, true);
         };
     }
     /***************Ende Bereich gekippte Fenster Beginn Bereich gekippte Türen*/
@@ -1131,7 +1132,7 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
             if (logging) log("Reaching tilted+ in checkWindow");
             TiltedDoorCount++; //Gekippte Türen Zähler erhöhen
             RoomTiltedDoorCount[TempRoomIndex]++;
-            setState(praefix + TempRoom + ".RoomTiltedDoorCount", RoomTiltedDoorCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomTiltedDoorCount", RoomTiltedDoorCount[TempRoomIndex], true);
             if (logging) log("TiltedDoorCount=" + TiltedDoorCount + " RoomTiltedDoorCount=" + RoomTiltedDoorCount[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
         }
         else if ((SensorVal[x] != "tilted" && SensorOldVal[x] == "tilted") && IsInit == false) { //Bei Wechsel von gekippt auf offen oder geschlossen und keine Initphase
@@ -1141,19 +1142,19 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
             if (TiltedDoorCount < 0) TiltedDoorCount = 0;
             if (RoomTiltedDoorCount[x] < 0) RoomTiltedDoorCount[x] = 0;
 
-            setState(praefix + TempRoom + ".RoomTiltedDoorCount", RoomTiltedDoorCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomTiltedDoorCount", RoomTiltedDoorCount[TempRoomIndex], true);
             if (logging) log("TiltedDoorCount=" + TiltedDoorCount + " RoomTiltedDoorCount=" + RoomTiltedDoorCount[TempRoomIndex] + " TempRoomIndex=" + TempRoomIndex)
         };
 
         if (IsInit && RoomTiltedDoorCount[TempRoomIndex] == 0) {
-            setState(praefix + TempRoom + ".RoomTiltedDoorCount", RoomTiltedDoorCount[TempRoomIndex]);
+            setState(praefix + TempRoom + ".RoomTiltedDoorCount", RoomTiltedDoorCount[TempRoomIndex], true);
         };
 
         if (RoomOpenWindowCount[TempRoomIndex] == 0 && RoomOpenDoorCount[TempRoomIndex] == 0) {
-            setState(praefix + TempRoom + ".RoomIsOpen", false);
+            setState(praefix + TempRoom + ".RoomIsOpen", false, true);
         }
         else {
-            setState(praefix + TempRoom + ".RoomIsOpen", true);
+            setState(praefix + TempRoom + ".RoomIsOpen", true, true);
         };
     }
     /***************Ende Bereich gekippte Türen*/
@@ -1161,32 +1162,32 @@ function CheckWindow(x) { //Für einzelnes Fenster/Tür. Via Trigger angesteuert
 
 
     RoomOpenCount[TempRoomIndex] = RoomOpenDoorCount[TempRoomIndex] + RoomOpenWindowCount[TempRoomIndex];
-    setState(praefix + TempRoom + ".RoomOpenCount", RoomOpenCount[TempRoomIndex]);
+    setState(praefix + TempRoom + ".RoomOpenCount", RoomOpenCount[TempRoomIndex], true);
 
     if (OpenWindowCount == 0) { //Wenn kein Fenster mehr offen Datenpunkte aktualisieren
-        setState(praefix + "WindowsOpen", 0);
-        setState(praefix + "WindowsTilted", 0);
-        setState(praefix + "AllWindowsClosed", true);
+        setState(praefix + "WindowsOpen", 0, true);
+        setState(praefix + "WindowsTilted", 0, true);
+        setState(praefix + "AllWindowsClosed", true, true);
         if (logging) log("Alle Fenster geschlossen.");
     }
     else if (OpenWindowCount != 0) { //ansonsten ebenfalls Datenpunkte (mit anderen Werten) aktualisieren
-        setState(praefix + "WindowsOpen", OpenWindowCount);
-        setState(praefix + "WindowsTilted", TiltedWindowCount);
-        setState(praefix + "AllWindowsClosed", false);
+        setState(praefix + "WindowsOpen", OpenWindowCount, true);
+        setState(praefix + "WindowsTilted", TiltedWindowCount, true);
+        setState(praefix + "AllWindowsClosed", false, true);
     };
 
     if (logging) log("Offene Fenster gesamt= " + OpenWindowCount);
 
     if (OpenDoorCount == 0) { //Wenn keine Tür mehr offen Datenpunkte aktualisieren
-        setState(praefix + "DoorsOpen", 0);
-        setState(praefix + "DoorsTilted", 0);
-        setState(praefix + "AllDoorsClosed", true);
+        setState(praefix + "DoorsOpen", 0, true);
+        setState(praefix + "DoorsTilted", 0, true);
+        setState(praefix + "AllDoorsClosed", true, true);
         if (logging) log("Alle Türen geschlossen.");
     }
     else { //ansonsten ebenfalls Datenpunkte (mit anderen Werten) aktualisieren
-        setState(praefix + "DoorsOpen", OpenDoorCount);
-        setState(praefix + "DoorsTilted", TiltedDoorCount);
-        setState(praefix + "AllDoorsClosed", false);
+        setState(praefix + "DoorsOpen", OpenDoorCount, true);
+        setState(praefix + "DoorsTilted", TiltedDoorCount, true);
+        setState(praefix + "AllDoorsClosed", false, true);
     };
 
     if (logging) log("Offene Türen gesamt= " + OpenDoorCount);

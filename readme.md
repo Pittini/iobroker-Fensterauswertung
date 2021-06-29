@@ -80,6 +80,9 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 # Changelog
 #### 03.05.21 (1.6.12)
+* Fix: Unbenutzte PushOver Instanz wird jetzt verwendet.
+* Add: PushOver Sound Option zu Einstellungen hinzugefügt. https://github.com/Pittini/iobroker-Fensterauswertung/issues/38
+#### 03.05.21 (1.6.12)
 * Fix: Fehlermeldung "Read-only state ... has been written without ack-flag with value ..." nach update des Js Controller auf Version 3.3.x oder höher behoben. Issue: https://github.com/Pittini/iobroker-Fensterauswertung/issues/34
 #### 18.03.21 (V1.6.11)
 - Fix: Anzeigefehler für Pluralvariante von RoomsWithOpenings behoben.
