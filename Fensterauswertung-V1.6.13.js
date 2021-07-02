@@ -39,8 +39,8 @@ const AlexaVolume = "50"; // Lautstärke der Nachrichten. Wert von 1 bis 100
 
 //Other
 const UseMail = false; //Nachricht via Mail versenden?
-const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
-const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
+const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Developerfunktion, muß deaktiviert sein.
+const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Developerfunktion, muß deaktiviert sein.
 
 const NoMsgAtPresence = false; //Sollen Nachrichten bei Anwesenheit unterdrückt werden?
 
