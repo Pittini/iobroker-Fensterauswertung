@@ -1,4 +1,4 @@
-## (Version 1.6.12)
+## (Version 1.6.14)
 ## Script um offene Türen und Fenster pro Raum und insgesamt zu zählen sowie offen/zu/gekippt States anzulegen und eine pro Raum konfigurierbare Lüftungsempfehlung (zeitbezogen) zu geben. Direkte Ausgabe aller Stati via HTML Tabelle und/oder Alexa/Telegram/Mail. Flexibel konfigurierbar.
 
 **If you like it, please consider a donation:**
@@ -52,7 +52,7 @@
    12. SendWindowWarnMsg: Einstellfeld ob Ihr für diesen Raum eine Offenwarnung haben möchtet.
    13. RoomOrderPriority: Einstellfeld für die benutzerdefinierte Sortierung der Raumliste (wichtige Räume an den Listenanfang um nicht scrollen zu müssen). Keine doppelten Zahlen verwenden! Änderungen hier treten erst nach Skriptneustart in Kraft.
 
-7. Zusätzlich werden 14 weitere Datenpunkte in der Skript Root ("javascript.0.FensterUeberwachung") angelegt:
+7. Zusätzlich werden 15 weitere Datenpunkte in der Skript Root ("javascript.0.FensterUeberwachung") angelegt:
    1.  AllWindowsClosed (Ersetzt ab V.1.6.0 die Bezeichnung "AlleFensterZu"): Gesamtstatus aller Fenster
    2.  AllDoorsClosed: Gesamtstatus aller Türen
    3.  DoorsOpen: Anzahl der offenen Türen über alle Räume summiert.
@@ -70,6 +70,7 @@
         - 0 = Alle Ansagen werden ausgegeben. 
         - 1 = "Stumme" Nachrichten via Telegram/Mail etc. werden ausgegeben, Sprachausgaben geblockt. 
         - 2 = Alle Nachrichten werden geblockt.
+   15. SendRoomsWithOpeningsMsg: Legt fest ob bei Statusänderungen eine Übersichtsmeldung gesendet wird.
  
 ![fensteroffentut3.jpg](/admin/fensteroffentut3.jpg) 
 
@@ -79,7 +80,9 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 
 Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 # Changelog
-#### 03.05.21 (1.6.12)
+#### 09.10.21 (1.6.14)
+* Add: SendRoomsWithOpeningsMsg: Legt fest ob bei Statusänderungen eine Übersichtsmeldung gesendet wird.
+#### 06.05.21 (1.6.13)
 * Fix: Unbenutzte PushOver Instanz wird jetzt verwendet.
 * Add: PushOver Sound Option zu Einstellungen hinzugefügt. https://github.com/Pittini/iobroker-Fensterauswertung/issues/38
 #### 03.05.21 (1.6.12)

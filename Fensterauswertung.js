@@ -1,4 +1,4 @@
-const Skriptversion = "1.6.13" //vom 29.06.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.14" //vom 8.10.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster/Türen pro Raum und insgesamt zu zählen.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -25,7 +25,7 @@ const MaxMessages = 1; //Maximale Anzahl der Nachrichten pro Raum
 const UseTelegram = false; // Sollen Nachrichten via Telegram gesendet werden?
 
 //Pushover
-const UsePushover = false; // Sollen Nachrichten via PushOver gesendet werden?
+const UsePushOver = false; // Sollen Nachrichten via PushOver gesendet werden?
 const PushOverInstance = "pushover.0"; //Pushoverinstanz welche genutzt werden soll angeben
 const PushOverDevice = "All"; //Welches Gerät soll die Nachricht bekommen
 const PushOverTitle = "Fensterüberwachung";
@@ -39,8 +39,8 @@ const AlexaVolume = "50"; // Lautstärke der Nachrichten. Wert von 1 bis 100
 
 //Other
 const UseMail = false; //Nachricht via Mail versenden?
-const UseSay = false; // Sollen Nachrichten via Say ausgegeben werden? Developerfunktion, muß deaktiviert sein.
-const UseEventLog = false; // Sollen Nachrichten ins Eventlog geschreiben werden? Developerfunktion, muß deaktiviert sein.
+const UseSay = true; // Sollen Nachrichten via Say ausgegeben werden? Autorenfunktion, muß deaktiviert werden.
+const UseEventLog = true; // Sollen Nachrichten ins Eventlog geschreiben werden? Autorenfunktion, muß deaktiviert werden.
 
 const NoMsgAtPresence = false; //Sollen Nachrichten bei Anwesenheit unterdrückt werden?
 
@@ -76,7 +76,6 @@ const SendDoorOpenCloseMsg = [];
 const SendWindowOpenCloseMsg = [];
 const SendWindowWarnMsg = [];
 const SendDoorWarnMsg = [];
-
 const OpenWindowListSeparator = "<br>"; //Trennzeichen für die Textausgabe der offenen Fenster pro Raum
 
 const WindowIsOpenWhen = ["true", "offen", "open", "opened", "2"]; // Hier können eigene States für offen angegeben werden, immer !!! in Kleinschreibung
@@ -133,6 +132,7 @@ let MuteMode = 0; //Stummschaltungsmodus für Nachrichten. 0=Alles erlaubt, 1=Sp
 let Presence = true; //Anwesenheit als gegeben initialisieren
 const IgnoreInProcess = []; //Läuft gerade eine Überprüfung ob eine Statusänderung ignoriert werden muß?
 let SensorCount = 0; //Hilfszähler weil y bei mehreren Funktionen mehrmals bei 0 beginnt
+let SendRoomsWithOpeningsMsg = false;
 
 log("starting Fensterskript, Version " + Skriptversion);
 
@@ -261,6 +261,8 @@ States[DpCount] = { id: praefix + "MessageLog", initial: "", forceCreation: fals
 DpCount++;
 States[DpCount] = { id: praefix + "OverviewTable", initial: "", forceCreation: false, common: { read: true, write: false, name: "Übersicht aller Räume und geöffneten Fenster", type: "string", def: "" } };
 DpCount++;
+States[DpCount] = { id: praefix + "SendRoomsWithOpeningsMsg", initial: false, forceCreation: false, common: { read: true, write: true, name: "Übersicht der offenen Türen und Fenster senden?", type: "boolean", role: "state", def: false } }; //
+DpCount++;
 States[DpCount] = { id: praefix + "MuteMode", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Stummschalten?", type: "number", min: 0, max: 2, def: 0 } };
 
 //Alle States anlegen, Main aufrufen wenn fertig
@@ -278,7 +280,7 @@ States.forEach(function (state) {
 function InitialSort() {
     let TempRoomHas = [];
     let TempRoomList = [];
-    let AlphabeticalSortedRoomList = RoomList.join(","); //Raumliste zu kommaseparierten String wndeln
+    let AlphabeticalSortedRoomList = RoomList.join(","); //Raumliste zu kommaseparierten String wandeln
     let OrderPriority;
     TempRoomList = AlphabeticalSortedRoomList.split(","); //String wieder zurück zu Array wandeln
     AlphabeticalSortedRoomList = TempRoomList.sort(); //Array sortieren
@@ -312,6 +314,7 @@ function InitialSort() {
 function init() {
     MessageLog = getState(praefix + "MessageLog").val;
     MuteMode = getState(praefix + "MuteMode").val;
+    SendRoomsWithOpeningsMsg = getState(praefix + "SendRoomsWithOpeningsMsg").val
     if (PresenceDp != "") Presence = getState(PresenceDp).val;
 
     for (let x = 0; x < RoomList.length; x++) { //Messaging DPs einlesen
@@ -376,7 +379,7 @@ function Meldung(msg) {
                 });
             };
 
-            if (UsePushover) {
+            if (UsePushOver) {
                 sendTo(PushOverInstance, "send", {
                     device: PushOverDevice, message: msg, title: PushOverTitle, sound: PushOverSound
                 });
@@ -417,7 +420,7 @@ function WriteMessageLog(msg) {
     };
     // log("TempMessageLog=" + TempMessageLog + " Logentrys=" + LogEntrys);
     MessageLog = TempMessageLog.join(LogEntrySeparator); //Array zu String wandeln und Separator anhängen
-    setState(praefix + "MessageLog", MessageLog,true); //Logstring schreiben
+    setState(praefix + "MessageLog", MessageLog, true); //Logstring schreiben
 }
 
 function CreateOverviewTable() { //  Erzeugt tabellarische Übersicht als HTML Tabelle   
@@ -887,6 +890,7 @@ function CreateRoomsWithOpeningsList() { //Erzeugt Textliste mit Räumen welche 
     };
     setState(praefix + "RoomsWithOpenings", RoomsWithOpenings, true);
     if (logging) log("RoomsWithOpenings: " + RoomsWithOpenings);
+    if (SendRoomsWithOpeningsMsg) Meldung(RoomsWithOpenings);
 }
 
 function CreateRoomsWithVentWarnings(x, Warning) { //Erzeugt Liste mit Räumen für die eine Lüftungswarnung besteht
@@ -1411,7 +1415,9 @@ function CreateTrigger() {
     on(praefix + "MuteMode", function (dp) { //Trigger für MuteMode erzeugen
         MuteMode = dp.state.val;
     });
-
+    on(praefix + "SendRoomsWithOpeningsMsg", function (dp) { //Trigger für SendRoomsWithOpeningsMsg erzeugen
+        SendRoomsWithOpeningsMsg = dp.state.val;
+    });
     if (PresenceDp != "") { //Trigger fürPresenceDp erzeugen wenn vorhanden
         if (logging) log("PresenceDp available, created Trigger for Presence")
         on(PresenceDp, function (dp) { //Trigger für Presence erzeugen
