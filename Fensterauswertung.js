@@ -1,4 +1,4 @@
-const Skriptversion = "1.6.14" //vom 8.10.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.14" //vom 11.10.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster/Türen pro Raum und insgesamt zu zählen.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -133,6 +133,8 @@ let Presence = true; //Anwesenheit als gegeben initialisieren
 const IgnoreInProcess = []; //Läuft gerade eine Überprüfung ob eine Statusänderung ignoriert werden muß?
 let SensorCount = 0; //Hilfszähler weil y bei mehreren Funktionen mehrmals bei 0 beginnt
 let SendRoomsWithOpeningsMsg = false;
+let SendRoomsWithOpeningsMsgRefresh = 0;
+let RoomsWithOpeningsMsgRefreshTickerObj;
 
 log("starting Fensterskript, Version " + Skriptversion);
 
@@ -263,6 +265,8 @@ States[DpCount] = { id: praefix + "OverviewTable", initial: "", forceCreation: f
 DpCount++;
 States[DpCount] = { id: praefix + "SendRoomsWithOpeningsMsg", initial: false, forceCreation: false, common: { read: true, write: true, name: "Übersicht der offenen Türen und Fenster senden?", type: "boolean", role: "state", def: false } }; //
 DpCount++;
+States[DpCount] = { id: praefix + "SendRoomsWithOpeningsMsgRefresh", initial: 60, forceCreation: false, common: { read: true, write: true, name: "Refreshzeit der Übersicht der offenen Türen und Fenster", type: "number", unit: "Min.", role: "state", min: 0, def: 60 } }; //
+DpCount++;
 States[DpCount] = { id: praefix + "MuteMode", initial: 0, forceCreation: false, common: { read: true, write: true, name: "Stummschalten?", type: "number", min: 0, max: 2, def: 0 } };
 
 //Alle States anlegen, Main aufrufen wenn fertig
@@ -314,7 +318,8 @@ function InitialSort() {
 function init() {
     MessageLog = getState(praefix + "MessageLog").val;
     MuteMode = getState(praefix + "MuteMode").val;
-    SendRoomsWithOpeningsMsg = getState(praefix + "SendRoomsWithOpeningsMsg").val
+    SendRoomsWithOpeningsMsg = getState(praefix + "SendRoomsWithOpeningsMsg").val;
+    SendRoomsWithOpeningsMsgRefresh = getState(praefix + "SendRoomsWithOpeningsMsgRefresh").val;
     if (PresenceDp != "") Presence = getState(PresenceDp).val;
 
     for (let x = 0; x < RoomList.length; x++) { //Messaging DPs einlesen
@@ -352,6 +357,18 @@ function main() {
     CreateRoomsWithVentWarnings();//Übersichtsliste mit Räumen mit Lüftungswarnung erstellen
     CreateOverviewTable(); //HTML Tabelle erstellen
     Ticker(); //Minutenticker für Tabellenrefresh starten
+    RoomsWithOpeningsMsgRefresh(SendRoomsWithOpeningsMsgRefresh);
+}
+
+function RoomsWithOpeningsMsgRefresh(refresh) {
+    if (typeof RoomsWithOpeningsMsgRefreshTickerObj == "object") clearInterval(RoomsWithOpeningsMsgRefreshTickerObj);
+
+    RoomsWithOpeningsMsgRefreshTickerObj = setInterval(function () { // Wenn 
+        if (SendRoomsWithOpeningsMsg && RoomsWithOpenings != "") {
+
+            Meldung(RoomsWithOpenings.substr(0, RoomsWithOpenings.length - LogEntrySeparator.length)); //Umbruch am Ende entfernen
+        };
+    }, refresh * 1000 * 60);
 }
 
 function Meldung(msg) {
@@ -739,6 +756,7 @@ function Ticker() {
         CreateOverviewTable();
     }, 60000);
 }
+
 function ReplaceChars(OrigString) {
     //log(typeof OrigString)
     if (typeof OrigString == "undefined") OrigString = "";
@@ -890,7 +908,6 @@ function CreateRoomsWithOpeningsList() { //Erzeugt Textliste mit Räumen welche 
     };
     setState(praefix + "RoomsWithOpenings", RoomsWithOpenings, true);
     if (logging) log("RoomsWithOpenings: " + RoomsWithOpenings);
-    if (SendRoomsWithOpeningsMsg) Meldung(RoomsWithOpenings);
 }
 
 function CreateRoomsWithVentWarnings(x, Warning) { //Erzeugt Liste mit Räumen für die eine Lüftungswarnung besteht
@@ -1418,6 +1435,10 @@ function CreateTrigger() {
     on(praefix + "SendRoomsWithOpeningsMsg", function (dp) { //Trigger für SendRoomsWithOpeningsMsg erzeugen
         SendRoomsWithOpeningsMsg = dp.state.val;
     });
+    on(praefix + "SendRoomsWithOpeningsMsgRefresh", function (dp) { //Trigger für SendRoomsWithOpeningsMsgRefresh erzeugen
+        SendRoomsWithOpeningsMsgRefresh = dp.state.val;
+        RoomsWithOpeningsMsgRefresh(dp.state.val);
+    });
     if (PresenceDp != "") { //Trigger fürPresenceDp erzeugen wenn vorhanden
         if (logging) log("PresenceDp available, created Trigger for Presence")
         on(PresenceDp, function (dp) { //Trigger für Presence erzeugen
@@ -1429,7 +1450,8 @@ function CreateTrigger() {
     onStop(function () { //Bei Scriptende alle Timer löschen
         for (let x = 0; x < RoomList.length; x++) {
             ClearVentTime(x);
-            ClearWindowWarnTime(x)
+            ClearWindowWarnTime(x);
+            if (typeof RoomsWithOpeningsMsgRefreshTickerObj == "object") clearInterval(RoomsWithOpeningsMsgRefreshTickerObj);
         };
     }, 100);
 }
