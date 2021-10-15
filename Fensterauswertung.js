@@ -1,4 +1,4 @@
-const Skriptversion = "1.6.14" //vom 11.10.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.14" //vom 15.10.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster/Türen pro Raum und insgesamt zu zählen.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -365,8 +365,12 @@ function RoomsWithOpeningsMsgRefresh(refresh) {
 
     RoomsWithOpeningsMsgRefreshTickerObj = setInterval(function () { // Wenn 
         if (SendRoomsWithOpeningsMsg && RoomsWithOpenings != "") {
-
-            Meldung(RoomsWithOpenings.substr(0, RoomsWithOpenings.length - LogEntrySeparator.length)); //Umbruch am Ende entfernen
+            if (RoomsWithOpenings.substr(RoomsWithOpenings.length - LogEntrySeparator.length, RoomsWithOpenings.length) == LogEntrySeparator) {//Wenn Umbruch am Ende
+                //  log(RoomsWithOpenings.substr(RoomsWithOpenings.length - LogEntrySeparator.length, RoomsWithOpenings.length)); 
+                Meldung(RoomsWithOpenings.substr(0, RoomsWithOpenings.length - LogEntrySeparator.length)); //Umbruch am Ende entfernen
+            } else {
+                Meldung(RoomsWithOpenings);
+            };
         };
     }, refresh * 1000 * 60);
 }
