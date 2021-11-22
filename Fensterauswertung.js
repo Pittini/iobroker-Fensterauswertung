@@ -1,4 +1,4 @@
-const Skriptversion = "1.6.14" //vom 15.10.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
+const Skriptversion = "1.6.15" //vom 22.11.2021 - https://github.com/Pittini/iobroker-Fensterauswertung - https://forum.iobroker.net/topic/31674/vorlage-generisches-fensteroffenskript-vis
 //Script um offene Fenster/Türen pro Raum und insgesamt zu zählen.
 //Möglichkeit eine Ansage nach x Minuten einmalig oder zyklisch bis Fensterschließung anzugeben
 //Dynamische erzeugung einer HTML Übersichtstabelle
@@ -13,7 +13,7 @@ const WhichWindowFunctionToUse = "Fenster"; // Legt fest nach welchem Begriff in
 const WhichDoorFunctionToUse = "Tuer"; // Legt fest nach welchem Begriff in Funktionen gesucht wird. Diese Funktion nur dem Datenpunkt zuweisen, NICHT dem ganzen Channel!
 const WindowIgnoreTime = 10000; // 10000 ms = 10 Sekunden - Zeit in ms für die kurzzeitiges öffnen/schliessen ignoriert wird
 const DoorIgnoreTime = 1000; // 1000 ms = 1 Sekunden - Zeit in ms für die kurzzeitiges öffnen/schliessen ignoriert wird
-
+const WhichEnumCategoryToUse = "functions"; // Legt fest in welcher Kategorie sich die Aufzählungen befinden! Nur ändern wer weis was er tut!
 
 //Nachrichteneinstellungen
 const TimeToWindowMsg = 900000 // 300000 ms = 5 Minuten - Zyklus- bzw. Ablaufzeit für Fenster-offenwarnung/en
@@ -126,7 +126,7 @@ let DpCount = 0; //Zähler
 let IsInit = true // Marker - Wird nach initialisierung auf false gesetzt
 // /** @type {{ id: string, initial: any, forceCreation: boolean, common: iobJS.StateCommon }[]} */
 const States = []; // Array mit anzulegenden Datenpunkten
-let Funktionen = getEnums('functions'); //Array mit Aufzählung der Funktionen
+let Funktionen = getEnums(WhichEnumCategoryToUse); //Array mit Aufzählung der Funktionen
 let MessageLog = ""; //Log der ausgegebenen Meldungen
 let MuteMode = 0; //Stummschaltungsmodus für Nachrichten. 0=Alles erlaubt, 1=Sprachnachrichten deaktivieren, 2=Alles deaktivieren
 let Presence = true; //Anwesenheit als gegeben initialisieren
@@ -150,7 +150,6 @@ for (let x in Funktionen) {        // loop ueber alle Functions
         if (Funktion == WhichWindowFunctionToUse || Funktion == WhichDoorFunctionToUse) { //Wenn Function ist Fenster oder Tür
             for (let y in members) { // Loop über alle Fenster/Tür Members
                 Sensor[SensorCount] = members[y];
-
                 let room = getObject(Sensor[SensorCount], 'rooms').enumNames[0];
                 if (typeof room == 'object') room = room.de;
                 if (RoomList.indexOf(room) == -1) { //Raumliste ohne Raumduplikate und zugehörige Dps erzeugen
@@ -364,11 +363,13 @@ function RoomsWithOpeningsMsgRefresh(refresh) {
     if (typeof RoomsWithOpeningsMsgRefreshTickerObj == "object") clearInterval(RoomsWithOpeningsMsgRefreshTickerObj);
 
     RoomsWithOpeningsMsgRefreshTickerObj = setInterval(function () { // Wenn 
+      //  log("RoomsWithOpeningsMsgRefresh working, refreshtime=" + refresh)
         if (SendRoomsWithOpeningsMsg && RoomsWithOpenings != "") {
             if (RoomsWithOpenings.substr(RoomsWithOpenings.length - LogEntrySeparator.length, RoomsWithOpenings.length) == LogEntrySeparator) {//Wenn Umbruch am Ende
-                //  log(RoomsWithOpenings.substr(RoomsWithOpenings.length - LogEntrySeparator.length, RoomsWithOpenings.length)); 
+        //        log("A " + RoomsWithOpenings.substr(0, RoomsWithOpenings.length - LogEntrySeparator.length));
                 Meldung(RoomsWithOpenings.substr(0, RoomsWithOpenings.length - LogEntrySeparator.length)); //Umbruch am Ende entfernen
             } else {
+        //        log("B" + RoomsWithOpenings)
                 Meldung(RoomsWithOpenings);
             };
         };

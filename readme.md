@@ -80,6 +80,8 @@ Es werden drei Icons aus dem Satz: *"icons-mfd-svg"* verwendet. Solltet Ihr dies
 
 Diese Datenpunkte könnt Ihr jetzt z.B. in Vis verwenden um offene Türen/Fenster pro Raum anzuzeigen. Es wird dabei berücksichtigt dass es mehrere Türen/Fenster pro Raum, bzw. mehrflügelige Fenster geben kann.
 # Changelog
+#### 22.11.21 (1.6.15)
+* Add: Zu verwendende Funktionsaufzählung nun konfigurierbar gemacht.
 #### 09.10.21 (1.6.14)
 * Add: SendRoomsWithOpeningsMsg: Legt fest ob bei Statusänderungen eine Übersichtsmeldung gesendet wird.
 #### 06.05.21 (1.6.13)
